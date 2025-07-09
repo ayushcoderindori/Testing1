@@ -19,7 +19,8 @@ export default function Login() {
   const [error, setError] = useState("");
 
 
-  const mutation = useMutation(() => api.post("/users/login", form), {
+  const mutation = useMutation({
+    mutationFn: () => api.post("/users/login", form),
     onSuccess: (res) => {
       const { accessToken, user } = res.data;
       localStorage.setItem("accessToken", accessToken); 
@@ -72,9 +73,9 @@ export default function Login() {
             variant="contained"
             fullWidth
             sx={{ mt: 2 }}
-            disabled={mutation.isLoading}
+            disabled={mutation.isPending}
           >
-            {mutation.isLoading ? "Logging in…" : "Log In"}
+            {mutation.isPending ? "Logging in…" : "Log In"}
           </Button>
         </form>
         <Box mt={2}>

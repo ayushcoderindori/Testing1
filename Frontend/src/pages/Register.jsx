@@ -22,7 +22,8 @@ export default function Register() {
   });
   const [error, setError] = useState("");
 
-  const mutation = useMutation(() => api.post("/users/register", form), {
+  const mutation = useMutation({
+    mutationFn: () => api.post("/users/register", form),
     onSuccess: (res) => {
       const { accessToken, user } = res.data;
       localStorage.setItem("accessToken", accessToken); 
@@ -84,9 +85,9 @@ export default function Register() {
             variant="contained"
             fullWidth
             sx={{ mt: 2 }}
-            disabled={mutation.isLoading}
+            disabled={mutation.isPending}
           >
-            {mutation.isLoading ? "Registering…" : "Register"}
+            {mutation.isPending ? "Registering…" : "Register"}
           </Button>
         </form>
         <Box mt={2}>

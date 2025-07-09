@@ -281,7 +281,7 @@ export default function Home() {
                 { label: "Credits Earned", value: "45K", icon: "💰" },
                 { label: "Premium Users", value: "320", icon: "⭐" }
               ].map((stat, index) => (
-                <Grid item xs={6} md={3} key={stat.label}>
+                <Grid size={{ xs: 6, md: 3 }} key={stat.label}>
                   <motion.div
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
@@ -337,7 +337,7 @@ export default function Home() {
         <AnimatePresence>
           <Grid container spacing={3}>
             {videos.map((video, index) => (
-              <Grid item xs={12} sm={6} md={4} lg={3} key={video.id}>
+              <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={video.id}>
                 <motion.div
                   layout
                   initial={{ opacity: 0, scale: 0.9 }}
