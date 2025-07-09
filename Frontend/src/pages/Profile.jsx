@@ -19,6 +19,7 @@ import {
   Badge,
   LinearProgress,
 } from "@mui/material";
+import Grid from '@mui/material/Grid2';
 import {
   School as SchoolIcon,
   Work as WorkIcon,
@@ -186,7 +187,7 @@ export default function Profile() {
       <Container maxWidth="lg" sx={{ mt: 10, pb: 4 }}>
         <Grid container spacing={4}>
           {/* Left Column */}
-          <Grid item xs={12} md={4}>
+          <Grid xs={12} md={4}>
             {/* Bio */}
             <Card sx={{ mb: 3 }}>
               <CardContent>
@@ -243,7 +244,7 @@ export default function Profile() {
           </Grid>
 
           {/* Right Column */}
-          <Grid item xs={12} md={8}>
+          <Grid xs={12} md={8}>
             <Paper sx={{ width: "100%" }}>
               <Tabs value={activeTab} onChange={handleTabChange} sx={{ px: 2 }}>
                 <Tab label="Skills Offering" />
@@ -256,7 +257,7 @@ export default function Profile() {
                 {activeTab === 0 && (
                   <Grid container spacing={3}>
                     {user.skillsOffering.map((skill) => (
-                      <Grid key={skill.id} item xs={12}>
+                      <Grid key={skill.id} xs={12}>
                         <motion.div whileHover={{ scale: 1.02 }}>
                           <Card variant="outlined">
                             <CardContent>

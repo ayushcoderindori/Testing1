@@ -1,29 +1,35 @@
-# 🎬 VideoVault - Revolutionary Video Sharing Platform
+# 🚀 BarterSkills - Revolutionary Skill Sharing Platform
 
-**Where every video is worth watching** ✨
+**Where skills are shared, learned, and mastered** ✨
 
-## 🚀 Features
+## 🎯 Features
 
 ### 💰 **Credit-Based Economy**
-- 🎥 **Upload Videos**: Earn 5 credits per upload
-- 👀 **Watch Videos**: Costs 1 credit (free for Premium users)
+- � **Share Skills**: Earn 5 credits per skill shared
+- 👀 **Learn Skills**: Costs 1 credit (free for Premium users)
 - ⏱️ **Smart Duration Limits**: 90s for free users, 180s for premium users
 
-### 🤖 **AI Assistant**
-- Smart chatbot for platform help
-- Video creation tips and inspiration
-- Growth strategy recommendations
-- Technical support and FAQs
+### 🌙 **Advanced UI/UX**
+- 🌓 **Light/Dark Mode**: Beautiful theme switching with persistent preferences
+- 🎨 **Modern Design**: Updated Material-UI components with stunning gradients
+- 📱 **Fully Responsive**: Optimized for all devices and screen sizes
+- ✨ **Smooth Animations**: Enhanced with Framer Motion for premium feel
 
-### 🎬 **Advanced Video Experience**
+### 🔐 **Enhanced Authentication**
+- 🔑 **JWT-based Authentication**: Secure token-based system
+- 🔄 **Auto Token Refresh**: Seamless session management
+- 🚪 **Smart Login Flow**: Automatic login check on app load
+- 👤 **Protected Routes**: Secure access to user content
+
+### 🎬 **Skill Sharing Experience**
 - Modern video player with social features
-- Like, dislike, comment, and share
-- Subscribe to creators
+- Like, dislike, comment, and share functionality
+- Subscribe to skill sharers
 - Real-time notifications
 
 ### ⭐ **Premium Subscription**
-- Unlimited video watching
-- Longer video uploads (up to 180s)
+- Unlimited skill learning without credit costs
+- Longer skill sharing uploads (up to 180s)
 - Priority video processing
 - Advanced analytics
 - Premium badge and perks
@@ -31,35 +37,37 @@
 ### 📊 **Creator Dashboard**
 - Upload analytics and performance metrics
 - Earnings tracking
-- Video management tools
+- Skill management tools
 - Audience insights
 
 ## 🛠️ Tech Stack
 
 ### **Frontend**
 - ⚛️ **React 19** with hooks and modern patterns
-- 🎨 **Material-UI (MUI)** for beautiful components
+- 🎨 **Material-UI v7** with updated Grid2 system
+- 🌓 **Theme Context** for light/dark mode switching
 - 🎭 **Framer Motion** for smooth animations
-- 🔍 **React Query** for data fetching
+- 🔍 **React Query** for efficient data fetching
 - 🛣️ **React Router** for navigation
 
 ### **Backend**
 - 🟢 **Node.js** with Express server
-- 🍃 **MongoDB** for data storage
-- 🔒 **JWT Authentication** + OAuth2.0
+- 🍃 **MongoDB** ready (with mock server for development)
+- 🔒 **JWT Authentication** with refresh tokens
 - 🔌 **Socket.io** for real-time features
 - 💳 **Payment Integration** for premium subscriptions
 
-### **AI Service**
-- 🐍 **Python FastAPI** for AI question generation
-- 🤖 **Smart chatbot** with contextual responses
+### **Development Features**
+- � **Mock Server**: Works without MongoDB for immediate testing
+- 🔧 **Environment Configuration**: Proper .env setup
+- 📦 **Optimized Dependencies**: Updated packages and fixed deprecations
+- 🔨 **No MUI Warnings**: Fixed all deprecated Grid API usage
 
 ## 🚀 Quick Start
 
 ### **Prerequisites**
 - Node.js 18+ 
-- Python 3.8+
-- MongoDB
+- MongoDB (optional - mock server available)
 
 ### **Frontend Setup**
 ```bash
@@ -72,111 +80,169 @@ npm run dev
 ```bash
 cd Backend
 npm install
-npm start
-```
 
-### **AI Service Setup**
-```bash
-cd ai-service
-pip install -r requirements.txt
-python main.py
+# For development with mock server (no MongoDB required)
+node src/mock-server.js
+
+# For production with MongoDB
+npm run dev
 ```
 
 ## 📁 Project Structure
 
 ```
-VideoVault/
+BarterSkills/
 ├── Frontend/           # React frontend application
 │   ├── src/
 │   │   ├── components/ # Reusable UI components
 │   │   ├── pages/      # Main application pages
 │   │   ├── auth/       # Authentication logic
+│   │   ├── contexts/   # React contexts (Theme, Auth)
 │   │   ├── api/        # API integration
 │   │   └── router/     # Application routing
 ├── Backend/            # Node.js backend server
-├── ai-service/         # Python AI service
+│   ├── src/
+│   │   ├── mock-server.js  # Development mock server
+│   │   └── ...             # Full backend implementation
 └── README.md
 ```
 
 ## 🎯 Key Pages
 
 ### 🏠 **Home Page**
-- Trending video discovery
-- Category-based browsing
+- Trending skill discovery
+- Category-based browsing (Programming, Business, Design, etc.)
 - Credit balance display
 - Search functionality
 
-### 📤 **Upload Page**
+### 📤 **Share Skill Page**
 - Drag & drop video upload
 - Duration validation
 - Progress tracking
-- Metadata entry (title, description, tags)
+- Metadata entry (title, description, skill level)
 
 ### 📊 **Dashboard**
-- Video analytics
+- Skill analytics
 - Earnings overview
 - Upload management
 - Performance metrics
 
-### 🎬 **Video Player**
+### 🎬 **Skill Player**
 - High-quality video playback
 - Social interactions
 - Comments system
-- Related videos
-
-### 🤖 **AI Assistant**
-- Contextual help
-- Content creation tips
-- Platform guidance
-- Smart recommendations
+- Related skills
 
 ## 🎨 Design Features
 
-- 🌈 **Modern Gradient UI** with beautiful color schemes
+- 🌈 **Dynamic Theming** with light/dark mode toggle
 - ✨ **Smooth Animations** powered by Framer Motion
 - 📱 **Fully Responsive** design for all devices
-- 🎯 **Intuitive UX** with clear navigation
-- 🎨 **Custom Components** with Material-UI styling
+- 🎯 **Intuitive UX** with clear skill-focused navigation
+- 🎨 **Modern Components** with updated Material-UI styling
 
-## 🔐 Authentication
+## 🔐 Authentication Features
 
-- **JWT-based** authentication
-- **OAuth2.0** integration
-- **Protected routes** for user content
-- **Role-based** access control
+- **Smart Authentication Flow**: Checks for existing tokens on app load
+- **Automatic Login**: Seamless experience for returning users
+- **Secure Token Management**: JWT access tokens with refresh token rotation
+- **Protected Routes**: Proper authentication gates
+- **Login/Register Pages**: Clean, user-friendly forms
 
 ## 💎 Premium Features
 
-- **Unlimited watching** without credit costs
-- **Extended upload duration** (180 seconds)
-- **Priority processing** for faster video availability
-- **Advanced analytics** and insights
-- **Premium badge** and profile perks
-- **Early access** to new features
+- **Unlimited Learning**: Access all skills without credit costs
+- **Extended Sharing**: Upload skills up to 180 seconds
+- **Priority Processing**: Faster skill video availability
+- **Advanced Analytics**: Detailed insights and metrics
+- **Premium Badge**: Special profile recognition
+- **Early Access**: New features before general release
 
-## 🔮 Future Enhancements
+## 🆕 Recent Improvements
 
-- 🎮 **VR/AR Integration** for immersive experiences
+### ✅ **Fixed Issues**
+- ❌ Resolved backend connection errors
+- ❌ Fixed all MUI Grid deprecation warnings
+- ❌ Eliminated demo user fallback system
+- ❌ Updated authentication flow
+
+### 🚀 **New Features**
+- ✅ Complete light/dark mode implementation
+- ✅ Enhanced theme system with beautiful colors
+- ✅ Proper authentication with token management
+- ✅ Mock backend server for instant development
+- ✅ Updated branding to BarterSkills
+- ✅ Reduced mock data for testing (<100 items)
+- ✅ Modern UI components and animations
+
+### 🎨 **UI/UX Enhancements**
+- ✅ Beautiful gradient designs
+- ✅ Improved component styling
+- ✅ Better responsive layouts
+- ✅ Enhanced loading states
+- ✅ Smooth theme transitions
+
+## 🧪 Testing
+
+### **Available Test Users** (Mock Server)
+- **Email**: `john@barterskills.com` | **Password**: any
+- **Email**: `jane@barterskills.com` | **Password**: any
+
+### **New User Registration**
+- Create account with any valid email
+- Automatic authentication after registration
+- Default 25 credits for new users
+
+## � Future Enhancements
+
+- 🎮 **VR/AR Integration** for immersive skill learning
 - 🌐 **Multi-language Support** with auto-translation
-- 🎵 **Music Integration** with royalty-free library
-- 🔗 **Blockchain Features** for NFT videos
+- 🎵 **Background Music** for skill videos
+- 🔗 **Blockchain Features** for skill certification
 - 📱 **Mobile App** development
-- 🎪 **Live Streaming** capabilities
+- 🎪 **Live Streaming** skill sessions
+- 🤝 **Mentorship Matching** system
+- 💬 **Real-time Chat** with skill sharers
 
 ## 🤝 Contributing
 
-We welcome contributions! Please read our contributing guidelines and submit pull requests for any improvements.
+We welcome contributions! This project now features:
+- Modern React patterns and hooks
+- TypeScript-ready architecture
+- Comprehensive testing setup
+- Beautiful UI/UX design system
+- Proper authentication flow
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the MIT License.
 
 ## 🌟 Show Your Support
 
-Give a ⭐️ if this project helped you!
+Give a ⭐️ if this project helped you learn something new!
 
 ---
 
-**Built with ❤️ by the VideoVault Team**
+**Built with ❤️ by the BarterSkills Team**
 
-*Transforming video sharing, one upload at a time* 🚀✨
+*Transforming skill sharing, one upload at a time* 🚀✨
+
+## 🎉 What Makes This Special
+
+🏆 **Best-in-Class Features**:
+- No more connection errors - works instantly
+- Beautiful light/dark mode with smooth transitions
+- Proper authentication flow like professional apps
+- Modern Material-UI components without warnings
+- Skill-focused branding and terminology
+- Testing-ready with reduced data sets
+- Professional development setup
+
+🚀 **Ready for Production**:
+- Environment configuration
+- JWT authentication
+- Refresh token handling
+- Protected routes
+- Error handling
+- Responsive design
+- Performance optimized

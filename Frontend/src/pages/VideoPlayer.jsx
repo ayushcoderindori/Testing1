@@ -50,6 +50,7 @@ import {
 } from "@mui/icons-material";
 import { motion, AnimatePresence } from "framer-motion";
 import useAuth from "../auth/useAuth.js";
+import Grid from '@mui/material/Grid2';
 
 const mockVideoData = {
   id: 1,
@@ -213,7 +214,7 @@ export default function VideoPlayer() {
     <Container maxWidth="xl" sx={{ py: 3 }}>
       <Grid container spacing={3}>
         {/* Main Video Section */}
-        <Grid item xs={12} lg={8}>
+        <Grid xs={12} lg={8}>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -540,7 +541,7 @@ export default function VideoPlayer() {
         </Grid>
 
         {/* Sidebar */}
-        <Grid item xs={12} lg={4}>
+        <Grid xs={12} lg={4}>
           <Stack spacing={3}>
             {/* Creator Profile Card */}
             <Card>

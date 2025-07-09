@@ -9,6 +9,7 @@ import {
   Stack,
   Divider,
 } from "@mui/material";
+import Grid from '@mui/material/Grid2';
 import {
   Twitter as TwitterIcon,
   Facebook as FacebookIcon,
@@ -31,7 +32,7 @@ export default function Footer() {
     >
       <Container maxWidth="lg">
         <Grid container spacing={4}>
-          <Grid item xs={12} md={4}>
+          <Grid xs={12} md={4}>
             <Typography variant="h5" gutterBottom fontWeight="bold">
               ⚡ BarterSkills
             </Typography>
@@ -78,7 +79,7 @@ export default function Footer() {
             </Stack>
           </Grid>
 
-          <Grid item xs={12} sm={6} md={2}>
+          <Grid xs={12} sm={6} md={2}>
             <Typography variant="h6" gutterBottom>
               Platform
             </Typography>
@@ -98,7 +99,7 @@ export default function Footer() {
             </Stack>
           </Grid>
 
-          <Grid item xs={12} sm={6} md={2}>
+          <Grid xs={12} sm={6} md={2}>
             <Typography variant="h6" gutterBottom>
               Community
             </Typography>
@@ -118,7 +119,7 @@ export default function Footer() {
             </Stack>
           </Grid>
 
-          <Grid item xs={12} sm={6} md={2}>
+          <Grid xs={12} sm={6} md={2}>
             <Typography variant="h6" gutterBottom>
               Support
             </Typography>
@@ -138,7 +139,7 @@ export default function Footer() {
             </Stack>
           </Grid>
 
-          <Grid item xs={12} sm={6} md={2}>
+          <Grid xs={12} sm={6} md={2}>
             <Typography variant="h6" gutterBottom>
               Legal
             </Typography>
