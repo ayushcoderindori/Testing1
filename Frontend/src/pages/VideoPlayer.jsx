@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import {
   Box,
@@ -10,479 +10,688 @@ import {
   Grid,
   Chip,
   Button,
-  Rating,
-  Paper,
+  IconButton,
+  TextField,
   Stack,
   Divider,
-  Tab,
-  Tabs,
-  IconButton,
+  CardMedia,
+  Badge,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
-  TextField,
+  List,
+  ListItem,
+  ListItemAvatar,
+  ListItemText,
+  Paper,
+  Tooltip,
+  Tabs,
+  Tab,
 } from "@mui/material";
 import {
-  Star as StarIcon,
-  LocationOn as LocationIcon,
-  AccessTime as TimeIcon,
-  People as PeopleIcon,
-  Language as LanguageIcon,
-  School as SchoolIcon,
-  Message as MessageIcon,
-  SwapHoriz as SwapIcon,
-  Favorite as FavoriteIcon,
+  PlayArrow as PlayIcon,
+  Pause as PauseIcon,
+  Favorite as LikeIcon,
+  FavoriteBorder as LikeBorderIcon,
+  ThumbDown as DislikeIcon,
+  ThumbDownOffAlt as DislikeBorderIcon,
   Share as ShareIcon,
-  CalendarToday as CalendarIcon,
+  Download as DownloadIcon,
+  Report as ReportIcon,
+  Send as SendIcon,
+  MoreVert as MoreIcon,
+  Subscribe as SubscribeIcon,
+  Notifications as NotificationIcon,
+  Comment as CommentIcon,
+  Visibility as ViewIcon,
+  MonetizationOn as CreditIcon,
+  Close as CloseIcon,
 } from "@mui/icons-material";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
+import useAuth from "../auth/useAuth.js";
 
-const mockSkillData = {
+const mockVideoData = {
   id: 1,
-  title: "Master React.js Development",
-  description: "Comprehensive React.js course covering everything from basics to advanced concepts. Learn hooks, state management, performance optimization, and modern React patterns. Perfect for beginners and intermediate developers looking to master React.",
-  category: "Web Development",
-  level: "Intermediate to Advanced",
-  rating: 4.9,
-  reviewCount: 47,
-  studentCount: 156,
-  timeCommitment: "2-3 hours/week",
-  duration: "8-12 weeks",
-  meetingType: "Online & In-Person",
-  maxStudents: 8,
-  currentStudents: 6,
-  tags: ["React", "JavaScript", "Frontend", "Hooks", "State Management"],
-  seeking: "UI/UX Design",
-  seekingDescription: "Looking to learn modern UI/UX design principles, Figma, and user research methodologies",
+  title: "Epic Coding Session: Building React in 60 Seconds! 🔥",
+  description: "In this amazing tutorial, I'll show you how to build a complete React component from scratch in under 60 seconds! Perfect for beginners and intermediate developers looking to level up their React skills. We'll cover hooks, state management, and modern React patterns.",
+  videoUrl: "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4",
+  thumbnail: "https://picsum.photos/1280/720?random=1",
+  duration: 85,
+  views: 12500,
+  likes: 890,
+  dislikes: 12,
+  uploadedAt: "2 hours ago",
+  category: "Tech",
+  tags: ["React", "JavaScript", "Tutorial", "Coding"],
   
-  instructor: {
+  creator: {
     id: 1,
-    name: "Sarah Chen",
-    avatar: "/api/placeholder/80/80",
-    rating: 4.9,
-    totalReviews: 234,
-    location: "San Francisco, CA",
-    responseTime: "Usually responds within 2 hours",
-    verified: true,
-    joinedDate: "March 2023",
-    skillsOffered: 5,
-    studentsHelped: "300+",
-    bio: "Senior Software Engineer at a Fortune 500 company with 6+ years of React experience. Passionate about teaching and helping others grow in tech."
+    username: "codemaster_alex",
+    fullName: "Alex Chen",
+    avatar: "https://picsum.photos/80/80?random=101",
+    isVerified: true,
+    subscribers: 45200,
+    videosCount: 127,
+    bio: "Full-stack developer and coding educator. Helping developers level up their skills one video at a time! 🚀",
+    socialLinks: {
+      twitter: "@codemaster_alex",
+      github: "github.com/alexchen",
+      website: "alexchen.dev"
+    }
   },
 
-  curriculum: [
-    {
-      week: 1,
-      title: "React Fundamentals",
-      topics: ["Components", "JSX", "Props", "State"],
-      duration: "3 hours"
-    },
-    {
-      week: 2,
-      title: "Hooks Deep Dive",
-      topics: ["useState", "useEffect", "Custom Hooks"],
-      duration: "3 hours"
-    },
-    {
-      week: 3,
-      title: "State Management",
-      topics: ["Context API", "useReducer", "State Patterns"],
-      duration: "3 hours"
-    },
-    {
-      week: 4,
-      title: "Performance & Optimization",
-      topics: ["React.memo", "useMemo", "useCallback"],
-      duration: "3 hours"
-    }
-  ],
-
-  reviews: [
+  comments: [
     {
       id: 1,
-      reviewer: "Alex Johnson",
-      avatar: "/api/placeholder/40/40",
-      rating: 5,
-      date: "2 weeks ago",
-      comment: "Sarah is an incredible teacher! Her explanations are crystal clear and she provides excellent hands-on projects. I went from React novice to building complex applications."
+      user: {
+        username: "john_dev",
+        avatar: "https://picsum.photos/40/40?random=201",
+        isVerified: false
+      },
+      text: "This is absolutely incredible! I learned more in 60 seconds than in hours of other tutorials. Thanks Alex! 🙌",
+      timestamp: "1 hour ago",
+      likes: 23,
+      replies: [
+        {
+          id: 11,
+          user: {
+            username: "codemaster_alex",
+            avatar: "https://picsum.photos/40/40?random=101",
+            isVerified: true
+          },
+          text: "Thanks John! Really glad it helped you out! Keep coding! 💪",
+          timestamp: "45 minutes ago",
+          likes: 8
+        }
+      ]
     },
     {
       id: 2,
-      reviewer: "Maria Garcia",
-      avatar: "/api/placeholder/40/40",
-      rating: 5,
-      date: "1 month ago",
-      comment: "The best React learning experience I've had. Sarah's teaching style is perfect - patient, thorough, and always available for questions."
+      user: {
+        username: "sarah_codes",
+        avatar: "https://picsum.photos/40/40?random=202",
+        isVerified: true
+      },
+      text: "The way you explained hooks is just perfect! Could you make a longer version covering more advanced patterns?",
+      timestamp: "30 minutes ago",
+      likes: 15,
+      replies: []
     }
   ],
 
-  requirements: [
-    "Basic JavaScript knowledge",
-    "Familiarity with HTML/CSS",
-    "Computer with code editor",
-    "Enthusiasm to learn!"
-  ],
-
-  whatYoullLearn: [
-    "Master React components and JSX",
-    "Understand hooks and state management",
-    "Build real-world applications",
-    "Performance optimization techniques",
-    "Testing React applications",
-    "Deployment strategies"
+  relatedVideos: [
+    {
+      id: 2,
+      title: "Advanced React Patterns You Should Know",
+      thumbnail: "https://picsum.photos/320/180?random=2",
+      creator: "Alex Chen",
+      views: 8900,
+      duration: 125,
+      uploadedAt: "1 day ago"
+    },
+    {
+      id: 3,
+      title: "JavaScript ES6+ Features Explained",
+      thumbnail: "https://picsum.photos/320/180?random=3", 
+      creator: "Alex Chen",
+      views: 15600,
+      duration: 95,
+      uploadedAt: "3 days ago"
+    },
+    {
+      id: 4,
+      title: "Building Your First React App",
+      thumbnail: "https://picsum.photos/320/180?random=4",
+      creator: "Alex Chen", 
+      views: 22300,
+      duration: 180,
+      uploadedAt: "1 week ago"
+    }
   ]
 };
 
-export default function SkillDetail() {
+export default function VideoPlayer() {
   const { id } = useParams();
+  const { user } = useAuth();
+  const [video, setVideo] = useState(mockVideoData);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [hasLiked, setHasLiked] = useState(false);
+  const [hasDisliked, setHasDisliked] = useState(false);
+  const [isSubscribed, setIsSubscribed] = useState(false);
+  const [newComment, setNewComment] = useState("");
+  const [showShareDialog, setShowShareDialog] = useState(false);
+  const [showReportDialog, setShowReportDialog] = useState(false);
   const [activeTab, setActiveTab] = useState(0);
-  const [isFavorited, setIsFavorited] = useState(false);
-  const [showContactDialog, setShowContactDialog] = useState(false);
-  const [contactMessage, setContactMessage] = useState("");
-  
-  const skill = mockSkillData; // In real app, fetch based on id
 
-  const handleTabChange = (event, newValue) => {
-    setActiveTab(newValue);
+  useEffect(() => {
+    // Deduct 1 credit for watching (if not premium)
+    if (user && !user.isPremium) {
+      // API call to deduct credit
+      console.log("Deducting 1 credit for watching video");
+    }
+  }, [user]);
+
+  const handleLike = () => {
+    setHasLiked(!hasLiked);
+    if (hasDisliked) setHasDisliked(false);
+    // API call to like video
   };
 
-  const handleContact = () => {
-    setShowContactDialog(true);
+  const handleDislike = () => {
+    setHasDisliked(!hasDisliked);
+    if (hasLiked) setHasLiked(false);
+    // API call to dislike video
   };
 
-  const handleSendMessage = () => {
-    console.log("Sending message:", contactMessage);
-    setShowContactDialog(false);
-    setContactMessage("");
+  const handleSubscribe = () => {
+    setIsSubscribed(!isSubscribed);
+    // API call to subscribe/unsubscribe
+  };
+
+  const handleAddComment = () => {
+    if (newComment.trim()) {
+      // API call to add comment
+      console.log("Adding comment:", newComment);
+      setNewComment("");
+    }
+  };
+
+  const formatNumber = (num) => {
+    if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
+    if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
+    return num.toString();
+  };
+
+  const formatDuration = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
   return (
-    <Box sx={{ bgcolor: "background.default", minHeight: "100vh" }}>
-      <Container maxWidth="lg" sx={{ py: 4 }}>
-        <Grid container spacing={4}>
-          {/* Main Content */}
-          <Grid item xs={12} md={8}>
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-            >
-              <Card sx={{ mb: 3 }}>
-                <CardContent sx={{ p: 4 }}>
-                  <Box sx={{ display: "flex", justifyContent: "space-between", mb: 3 }}>
-                    <Chip label={skill.category} color="primary" />
-                    <Box>
-                      <IconButton 
-                        onClick={() => setIsFavorited(!isFavorited)}
-                        color={isFavorited ? "error" : "default"}
+    <Container maxWidth="xl" sx={{ py: 3 }}>
+      <Grid container spacing={3}>
+        {/* Main Video Section */}
+        <Grid item xs={12} lg={8}>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            {/* Video Player */}
+            <Card sx={{ mb: 3, overflow: "hidden", borderRadius: 3 }}>
+              <Box
+                sx={{
+                  position: "relative",
+                  paddingTop: "56.25%", // 16:9 aspect ratio
+                  bgcolor: "black",
+                  cursor: "pointer"
+                }}
+                onClick={() => setIsPlaying(!isPlaying)}
+              >
+                <Box
+                  component="img"
+                  src={video.thumbnail}
+                  sx={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "cover"
+                  }}
+                />
+                
+                {/* Play/Pause Overlay */}
+                <Box
+                  sx={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    bgcolor: isPlaying ? "transparent" : "rgba(0,0,0,0.3)",
+                    transition: "all 0.3s ease"
+                  }}
+                >
+                  {!isPlaying && (
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      whileHover={{ scale: 1.1 }}
+                    >
+                      <IconButton
+                        size="large"
+                        sx={{
+                          bgcolor: "rgba(255,255,255,0.9)",
+                          color: "black",
+                          width: 80,
+                          height: 80,
+                          "&:hover": { bgcolor: "white" }
+                        }}
                       >
-                        <FavoriteIcon />
+                        <PlayIcon sx={{ fontSize: 40 }} />
                       </IconButton>
-                      <IconButton>
-                        <ShareIcon />
-                      </IconButton>
-                    </Box>
-                  </Box>
+                    </motion.div>
+                  )}
+                </Box>
 
-                  <Typography variant="h3" gutterBottom fontWeight="bold">
-                    {skill.title}
-                  </Typography>
+                {/* Duration Badge */}
+                <Chip
+                  label={formatDuration(video.duration)}
+                  size="small"
+                  sx={{
+                    position: "absolute",
+                    bottom: 12,
+                    right: 12,
+                    bgcolor: "rgba(0,0,0,0.8)",
+                    color: "white",
+                    fontWeight: "bold"
+                  }}
+                />
+              </Box>
+            </Card>
 
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 3, mb: 3 }}>
+            {/* Video Info */}
+            <Card sx={{ mb: 3 }}>
+              <CardContent>
+                <Typography variant="h4" fontWeight="bold" gutterBottom>
+                  {video.title}
+                </Typography>
+
+                <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
                     <Box sx={{ display: "flex", alignItems: "center" }}>
-                      <Rating value={skill.rating} precision={0.1} readOnly />
-                      <Typography variant="body2" sx={{ ml: 1 }}>
-                        {skill.rating} ({skill.reviewCount} reviews)
+                      <ViewIcon sx={{ mr: 0.5, color: "text.secondary" }} />
+                      <Typography variant="body2">
+                        {formatNumber(video.views)} views
                       </Typography>
                     </Box>
                     <Typography variant="body2" color="text.secondary">
-                      <PeopleIcon sx={{ fontSize: 16, mr: 0.5, verticalAlign: "middle" }} />
-                      {skill.studentCount} students
+                      {video.uploadedAt}
                     </Typography>
+                  </Box>
+
+                  <Box sx={{ flexGrow: 1 }} />
+
+                  {/* Action Buttons */}
+                  <Stack direction="row" spacing={1}>
+                    <Tooltip title={hasLiked ? "Remove like" : "Like this video"}>
+                      <Button
+                        startIcon={hasLiked ? <LikeIcon /> : <LikeBorderIcon />}
+                        onClick={handleLike}
+                        color={hasLiked ? "error" : "inherit"}
+                        variant={hasLiked ? "contained" : "outlined"}
+                      >
+                        {formatNumber(video.likes + (hasLiked ? 1 : 0))}
+                      </Button>
+                    </Tooltip>
+
+                    <Tooltip title={hasDisliked ? "Remove dislike" : "Dislike this video"}>
+                      <Button
+                        startIcon={hasDisliked ? <DislikeIcon /> : <DislikeBorderIcon />}
+                        onClick={handleDislike}
+                        color={hasDisliked ? "primary" : "inherit"}
+                        variant={hasDisliked ? "contained" : "outlined"}
+                      >
+                        {formatNumber(video.dislikes + (hasDisliked ? 1 : 0))}
+                      </Button>
+                    </Tooltip>
+
+                    <Button
+                      startIcon={<ShareIcon />}
+                      variant="outlined"
+                      onClick={() => setShowShareDialog(true)}
+                    >
+                      Share
+                    </Button>
+
+                    <Button
+                      startIcon={<DownloadIcon />}
+                      variant="outlined"
+                    >
+                      Save
+                    </Button>
+
+                    <IconButton onClick={() => setShowReportDialog(true)}>
+                      <MoreIcon />
+                    </IconButton>
+                  </Stack>
+                </Box>
+
+                <Divider sx={{ mb: 3 }} />
+
+                {/* Creator Info */}
+                <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
+                  <Avatar
+                    src={video.creator.avatar}
+                    sx={{ width: 56, height: 56, mr: 2 }}
+                  />
+                  <Box sx={{ flex: 1 }}>
+                    <Box sx={{ display: "flex", alignItems: "center", mb: 0.5 }}>
+                      <Typography variant="h6" fontWeight="bold">
+                        {video.creator.fullName}
+                      </Typography>
+                      {video.creator.isVerified && (
+                        <Chip
+                          label="✓"
+                          size="small"
+                          color="primary"
+                          sx={{ ml: 1, minWidth: 24, height: 20 }}
+                        />
+                      )}
+                    </Box>
                     <Typography variant="body2" color="text.secondary">
-                      Level: {skill.level}
+                      {formatNumber(video.creator.subscribers)} subscribers • {video.creator.videosCount} videos
                     </Typography>
                   </Box>
-
-                  <Typography variant="body1" paragraph sx={{ fontSize: "1.1rem", lineHeight: 1.7 }}>
-                    {skill.description}
-                  </Typography>
-
-                  <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mb: 3 }}>
-                    {skill.tags.map((tag) => (
-                      <Chip key={tag} label={tag} variant="outlined" />
-                    ))}
-                  </Box>
-
-                  <Paper sx={{ p: 3, bgcolor: "primary.light", color: "primary.contrastText" }}>
-                    <Typography variant="h6" gutterBottom>
-                      💰 What the instructor is seeking in exchange:
-                    </Typography>
-                    <Typography variant="body1" fontWeight="bold">
-                      {skill.seeking}
-                    </Typography>
-                    <Typography variant="body2" sx={{ mt: 1, opacity: 0.9 }}>
-                      {skill.seekingDescription}
-                    </Typography>
-                  </Paper>
-                </CardContent>
-              </Card>
-
-              {/* Tabs Section */}
-              <Card>
-                <Tabs value={activeTab} onChange={handleTabChange}>
-                  <Tab label="Curriculum" />
-                  <Tab label="Reviews" />
-                  <Tab label="Requirements" />
-                </Tabs>
-
-                <CardContent sx={{ p: 3 }}>
-                  {/* Curriculum Tab */}
-                  {activeTab === 0 && (
-                    <Stack spacing={3}>
-                      <Typography variant="h6" gutterBottom>
-                        What You'll Learn
-                      </Typography>
-                      <Grid container spacing={2}>
-                        {skill.whatYoullLearn.map((item, index) => (
-                          <Grid key={index} item xs={12} sm={6}>
-                            <Box sx={{ display: "flex", alignItems: "center" }}>
-                              <SchoolIcon color="primary" sx={{ mr: 2 }} />
-                              <Typography variant="body2">{item}</Typography>
-                            </Box>
-                          </Grid>
-                        ))}
-                      </Grid>
-
-                      <Divider sx={{ my: 3 }} />
-
-                      <Typography variant="h6" gutterBottom>
-                        Course Curriculum
-                      </Typography>
-                      <Stack spacing={2}>
-                        {skill.curriculum.map((week) => (
-                          <Card key={week.week} variant="outlined">
-                            <CardContent>
-                              <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
-                                <Typography variant="subtitle1" fontWeight="bold">
-                                  Week {week.week}: {week.title}
-                                </Typography>
-                                <Typography variant="caption" color="text.secondary">
-                                  {week.duration}
-                                </Typography>
-                              </Box>
-                              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
-                                {week.topics.map((topic) => (
-                                  <Chip key={topic} label={topic} size="small" variant="outlined" />
-                                ))}
-                              </Box>
-                            </CardContent>
-                          </Card>
-                        ))}
-                      </Stack>
-                    </Stack>
-                  )}
-
-                  {/* Reviews Tab */}
-                  {activeTab === 1 && (
-                    <Stack spacing={3}>
-                      {skill.reviews.map((review) => (
-                        <Card key={review.id} variant="outlined">
-                          <CardContent>
-                            <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-                              <Avatar src={review.avatar} sx={{ mr: 2 }} />
-                              <Box sx={{ flexGrow: 1 }}>
-                                <Typography variant="subtitle2">{review.reviewer}</Typography>
-                                <Typography variant="caption" color="text.secondary">
-                                  {review.date}
-                                </Typography>
-                              </Box>
-                              <Rating value={review.rating} size="small" readOnly />
-                            </Box>
-                            <Typography variant="body2">{review.comment}</Typography>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </Stack>
-                  )}
-
-                  {/* Requirements Tab */}
-                  {activeTab === 2 && (
-                    <Stack spacing={2}>
-                      <Typography variant="h6" gutterBottom>
-                        Prerequisites
-                      </Typography>
-                      {skill.requirements.map((req, index) => (
-                        <Box key={index} sx={{ display: "flex", alignItems: "center" }}>
-                          <Box
-                            sx={{
-                              width: 8,
-                              height: 8,
-                              borderRadius: "50%",
-                              bgcolor: "primary.main",
-                              mr: 2
-                            }}
-                          />
-                          <Typography variant="body2">{req}</Typography>
-                        </Box>
-                      ))}
-                    </Stack>
-                  )}
-                </CardContent>
-              </Card>
-            </motion.div>
-          </Grid>
-
-          {/* Sidebar */}
-          <Grid item xs={12} md={4}>
-            <Stack spacing={3}>
-              {/* Instructor Card */}
-              <Card>
-                <CardContent>
-                  <Typography variant="h6" gutterBottom>
-                    Your Instructor
-                  </Typography>
                   
-                  <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
-                    <Avatar src={skill.instructor.avatar} sx={{ width: 60, height: 60, mr: 2 }} />
-                    <Box>
-                      <Typography variant="subtitle1" fontWeight="bold">
-                        {skill.instructor.name}
-                      </Typography>
-                      <Box sx={{ display: "flex", alignItems: "center" }}>
-                        <Rating value={skill.instructor.rating} size="small" readOnly />
-                        <Typography variant="caption" sx={{ ml: 1 }}>
-                          ({skill.instructor.totalReviews} reviews)
-                        </Typography>
+                  <Button
+                    variant={isSubscribed ? "outlined" : "contained"}
+                    color={isSubscribed ? "inherit" : "error"}
+                    startIcon={isSubscribed ? <NotificationIcon /> : <SubscribeIcon />}
+                    onClick={handleSubscribe}
+                    sx={{ ml: 2 }}
+                  >
+                    {isSubscribed ? "Subscribed" : "Subscribe"}
+                  </Button>
+                </Box>
+
+                {/* Description */}
+                <Typography variant="body1" paragraph>
+                  {video.description}
+                </Typography>
+
+                {/* Tags */}
+                <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
+                  {video.tags.map((tag) => (
+                    <Chip
+                      key={tag}
+                      label={`#${tag}`}
+                      variant="outlined"
+                      size="small"
+                      clickable
+                    />
+                  ))}
+                </Box>
+              </CardContent>
+            </Card>
+
+            {/* Comments Section */}
+            <Card>
+              <CardContent>
+                <Typography variant="h6" gutterBottom>
+                  Comments ({video.comments.length})
+                </Typography>
+
+                {/* Add Comment */}
+                {user && (
+                  <Box sx={{ mb: 3 }}>
+                    <Box sx={{ display: "flex", gap: 2, mb: 2 }}>
+                      <Avatar src={user.avatar} sx={{ width: 36, height: 36 }} />
+                      <TextField
+                        fullWidth
+                        placeholder="Add a comment..."
+                        value={newComment}
+                        onChange={(e) => setNewComment(e.target.value)}
+                        variant="outlined"
+                        size="small"
+                        multiline
+                        maxRows={3}
+                      />
+                    </Box>
+                    <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 1 }}>
+                      <Button
+                        size="small"
+                        onClick={() => setNewComment("")}
+                        disabled={!newComment.trim()}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        variant="contained"
+                        size="small"
+                        onClick={handleAddComment}
+                        disabled={!newComment.trim()}
+                        startIcon={<SendIcon />}
+                      >
+                        Comment
+                      </Button>
+                    </Box>
+                  </Box>
+                )}
+
+                {/* Comments List */}
+                <Stack spacing={3}>
+                  {video.comments.map((comment) => (
+                    <Box key={comment.id}>
+                      <Box sx={{ display: "flex", gap: 2 }}>
+                        <Avatar src={comment.user.avatar} sx={{ width: 36, height: 36 }} />
+                        <Box sx={{ flex: 1 }}>
+                          <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.5 }}>
+                            <Typography variant="subtitle2" fontWeight="bold">
+                              {comment.user.username}
+                            </Typography>
+                            {comment.user.isVerified && (
+                              <Chip
+                                label="✓"
+                                size="small"
+                                color="primary"
+                                sx={{ minWidth: 20, height: 16 }}
+                              />
+                            )}
+                            <Typography variant="caption" color="text.secondary">
+                              {comment.timestamp}
+                            </Typography>
+                          </Box>
+                          <Typography variant="body2" paragraph>
+                            {comment.text}
+                          </Typography>
+                          <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                            <Button size="small" startIcon={<LikeIcon />}>
+                              {comment.likes}
+                            </Button>
+                            <Button size="small">Reply</Button>
+                          </Box>
+
+                          {/* Replies */}
+                          {comment.replies.length > 0 && (
+                            <Box sx={{ ml: 4, mt: 2 }}>
+                              {comment.replies.map((reply) => (
+                                <Box key={reply.id} sx={{ display: "flex", gap: 2, mb: 2 }}>
+                                  <Avatar src={reply.user.avatar} sx={{ width: 28, height: 28 }} />
+                                  <Box sx={{ flex: 1 }}>
+                                    <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.5 }}>
+                                      <Typography variant="caption" fontWeight="bold">
+                                        {reply.user.username}
+                                      </Typography>
+                                      {reply.user.isVerified && (
+                                        <Chip
+                                          label="✓"
+                                          size="small"
+                                          color="primary"
+                                          sx={{ minWidth: 16, height: 14 }}
+                                        />
+                                      )}
+                                      <Typography variant="caption" color="text.secondary">
+                                        {reply.timestamp}
+                                      </Typography>
+                                    </Box>
+                                    <Typography variant="body2">
+                                      {reply.text}
+                                    </Typography>
+                                  </Box>
+                                </Box>
+                              ))}
+                            </Box>
+                          )}
+                        </Box>
                       </Box>
                     </Box>
+                  ))}
+                </Stack>
+              </CardContent>
+            </Card>
+          </motion.div>
+        </Grid>
+
+        {/* Sidebar */}
+        <Grid item xs={12} lg={4}>
+          <Stack spacing={3}>
+            {/* Creator Profile Card */}
+            <Card>
+              <CardContent>
+                <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+                  <Avatar
+                    src={video.creator.avatar}
+                    sx={{ width: 48, height: 48, mr: 2 }}
+                  />
+                  <Box sx={{ flex: 1 }}>
+                    <Typography variant="h6" fontWeight="bold">
+                      {video.creator.fullName}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      @{video.creator.username}
+                    </Typography>
                   </Box>
+                </Box>
+                <Typography variant="body2" color="text.secondary" paragraph>
+                  {video.creator.bio}
+                </Typography>
+                <Button variant="outlined" fullWidth>
+                  View Channel
+                </Button>
+              </CardContent>
+            </Card>
 
-                  <Typography variant="body2" color="text.secondary" paragraph>
-                    {skill.instructor.bio}
+            {/* Related Videos */}
+            <Card>
+              <CardContent>
+                <Typography variant="h6" gutterBottom>
+                  More from {video.creator.fullName}
+                </Typography>
+                <Stack spacing={2}>
+                  {video.relatedVideos.map((relatedVideo) => (
+                    <motion.div
+                      key={relatedVideo.id}
+                      whileHover={{ scale: 1.02 }}
+                      style={{ cursor: "pointer" }}
+                    >
+                      <Box sx={{ display: "flex", gap: 2 }}>
+                        <Box sx={{ position: "relative" }}>
+                          <CardMedia
+                            component="img"
+                            image={relatedVideo.thumbnail}
+                            sx={{ width: 120, height: 68, borderRadius: 1 }}
+                          />
+                          <Chip
+                            label={formatDuration(relatedVideo.duration)}
+                            size="small"
+                            sx={{
+                              position: "absolute",
+                              bottom: 4,
+                              right: 4,
+                              bgcolor: "rgba(0,0,0,0.8)",
+                              color: "white",
+                              fontSize: "0.7rem",
+                              height: 16
+                            }}
+                          />
+                        </Box>
+                        <Box sx={{ flex: 1, minWidth: 0 }}>
+                          <Typography
+                            variant="body2"
+                            fontWeight="bold"
+                            sx={{
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                              display: "-webkit-box",
+                              WebkitLineClamp: 2,
+                              WebkitBoxOrient: "vertical"
+                            }}
+                          >
+                            {relatedVideo.title}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            {formatNumber(relatedVideo.views)} views • {relatedVideo.uploadedAt}
+                          </Typography>
+                        </Box>
+                      </Box>
+                    </motion.div>
+                  ))}
+                </Stack>
+              </CardContent>
+            </Card>
+
+            {/* Credit Info */}
+            {user && !user.isPremium && (
+              <Card sx={{ bgcolor: "warning.light" }}>
+                <CardContent>
+                  <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+                    <CreditIcon sx={{ mr: 1, color: "warning.main" }} />
+                    <Typography variant="h6" fontWeight="bold">
+                      -1 Credit Used
+                    </Typography>
+                  </Box>
+                  <Typography variant="body2" paragraph>
+                    Watching this video cost 1 credit. Upgrade to Premium for unlimited viewing!
                   </Typography>
-
-                  <Stack spacing={1}>
-                    <Box sx={{ display: "flex", alignItems: "center" }}>
-                      <LocationIcon sx={{ fontSize: 16, mr: 1, color: "text.secondary" }} />
-                      <Typography variant="body2">{skill.instructor.location}</Typography>
-                    </Box>
-                    <Box sx={{ display: "flex", alignItems: "center" }}>
-                      <TimeIcon sx={{ fontSize: 16, mr: 1, color: "text.secondary" }} />
-                      <Typography variant="body2">{skill.instructor.responseTime}</Typography>
-                    </Box>
-                  </Stack>
-
-                  <Button
-                    variant="outlined"
-                    fullWidth
-                    sx={{ mt: 2 }}
-                    onClick={() => {/* Navigate to instructor profile */}}
-                  >
-                    View Profile
+                  <Button variant="contained" size="small" fullWidth>
+                    Upgrade to Premium
                   </Button>
                 </CardContent>
               </Card>
-
-              {/* Course Details Card */}
-              <Card>
-                <CardContent>
-                  <Typography variant="h6" gutterBottom>
-                    Course Details
-                  </Typography>
-                  
-                  <Stack spacing={2}>
-                    <Box>
-                      <Typography variant="subtitle2" color="text.secondary">
-                        Time Commitment
-                      </Typography>
-                      <Typography variant="body2">{skill.timeCommitment}</Typography>
-                    </Box>
-                    
-                    <Box>
-                      <Typography variant="subtitle2" color="text.secondary">
-                        Duration
-                      </Typography>
-                      <Typography variant="body2">{skill.duration}</Typography>
-                    </Box>
-                    
-                    <Box>
-                      <Typography variant="subtitle2" color="text.secondary">
-                        Format
-                      </Typography>
-                      <Typography variant="body2">{skill.meetingType}</Typography>
-                    </Box>
-                    
-                    <Box>
-                      <Typography variant="subtitle2" color="text.secondary">
-                        Class Size
-                      </Typography>
-                      <Typography variant="body2">
-                        {skill.currentStudents}/{skill.maxStudents} students
-                      </Typography>
-                    </Box>
-                  </Stack>
-                </CardContent>
-              </Card>
-
-              {/* Action Buttons */}
-              <Stack spacing={2}>
-                <Button
-                  variant="contained"
-                  size="large"
-                  startIcon={<SwapIcon />}
-                  fullWidth
-                >
-                  Propose Skill Exchange
-                </Button>
-                
-                <Button
-                  variant="outlined"
-                  size="large"
-                  startIcon={<MessageIcon />}
-                  fullWidth
-                  onClick={handleContact}
-                >
-                  Send Message
-                </Button>
-                
-                <Button
-                  variant="outlined"
-                  size="large"
-                  startIcon={<CalendarIcon />}
-                  fullWidth
-                >
-                  Schedule Free Consultation
-                </Button>
-              </Stack>
-            </Stack>
-          </Grid>
+            )}
+          </Stack>
         </Grid>
-      </Container>
+      </Grid>
 
-      {/* Contact Dialog */}
-      <Dialog open={showContactDialog} onClose={() => setShowContactDialog(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Send Message to {skill.instructor.name}</DialogTitle>
+      {/* Share Dialog */}
+      <Dialog open={showShareDialog} onClose={() => setShowShareDialog(false)}>
+        <DialogTitle>Share this video</DialogTitle>
         <DialogContent>
-          <TextField
-            autoFocus
-            margin="dense"
-            label="Your message"
-            fullWidth
-            multiline
-            rows={4}
-            variant="outlined"
-            value={contactMessage}
-            onChange={(e) => setContactMessage(e.target.value)}
-            placeholder="Hi! I'm interested in your React course and would like to discuss a potential skill exchange..."
-          />
+          <Stack spacing={2} sx={{ minWidth: 300 }}>
+            <TextField
+              fullWidth
+              label="Video URL"
+              value={`https://videovault.com/video/${video.id}`}
+              InputProps={{ readOnly: true }}
+            />
+            <Box sx={{ display: "flex", gap: 1 }}>
+              <Button variant="outlined">Twitter</Button>
+              <Button variant="outlined">Facebook</Button>
+              <Button variant="outlined">Copy Link</Button>
+            </Box>
+          </Stack>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setShowContactDialog(false)}>Cancel</Button>
-          <Button onClick={handleSendMessage} variant="contained">Send Message</Button>
+          <Button onClick={() => setShowShareDialog(false)}>Close</Button>
         </DialogActions>
       </Dialog>
-    </Box>
+
+      {/* Report Dialog */}
+      <Dialog open={showReportDialog} onClose={() => setShowReportDialog(false)}>
+        <DialogTitle>Report Video</DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" paragraph>
+            Help us keep VideoVault safe. Why are you reporting this video?
+          </Typography>
+          <Stack spacing={1}>
+            <Button variant="outlined" fullWidth>Spam or misleading</Button>
+            <Button variant="outlined" fullWidth>Inappropriate content</Button>
+            <Button variant="outlined" fullWidth>Harassment or bullying</Button>
+            <Button variant="outlined" fullWidth>Copyright violation</Button>
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setShowReportDialog(false)}>Cancel</Button>
+          <Button variant="contained" color="error">Report</Button>
+        </DialogActions>
+      </Dialog>
+    </Container>
   );
 }

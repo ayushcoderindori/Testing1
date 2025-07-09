@@ -20,136 +20,135 @@ import {
   ListItemAvatar,
   ListItemText,
   Divider,
+  CardMedia,
+  Menu,
+  MenuItem,
 } from "@mui/material";
 import {
   TrendingUp as TrendingIcon,
-  School as SchoolIcon,
+  VideoLibrary as VideoIcon,
   People as PeopleIcon,
   Star as StarIcon,
-  EmojiEvents as TrophyIcon,
-  SwapHoriz as ExchangeIcon,
+  MonetizationOn as CreditIcon,
+  Visibility as ViewIcon,
+  ThumbUp as LikeIcon,
+  Comment as CommentIcon,
+  MoreVert as MoreIcon,
+  Edit as EditIcon,
+  Delete as DeleteIcon,
+  Share as ShareIcon,
+  Analytics as AnalyticsIcon,
+  Upload as UploadIcon,
   CalendarToday as CalendarIcon,
-  Message as MessageIcon,
-  Add as AddIcon,
-  NotificationsActive as NotificationIcon,
 } from "@mui/icons-material";
-import { useQuery } from "@tanstack/react-query";
-import axios from "../api/axios.js";
-import { motion } from "framer-motion";
-import useAuth from "../auth/useAuth.js"; 
+import { motion, AnimatePresence } from "framer-motion";
+import useAuth from "../auth/useAuth.js";
+import { useNavigate } from "react-router-dom";
 
 const mockDashboardData = {
   stats: {
-    skillsOffered: 3,
-    skillsLearning: 2,
-    totalStudents: 47,
-    totalRating: 4.9,
-    completedExchanges: 12,
-    activeExchanges: 5,
-    credits: 45,
-    reputation: 850
+    totalVideos: 12,
+    totalViews: 25430,
+    totalLikes: 1280,
+    totalComments: 340,
+    creditsEarned: 60,
+    subscribersGained: 145,
+    watchTimeHours: 142,
+    avgRating: 4.7
   },
-  skillsOffering: [
+  recentVideos: [
     {
       id: 1,
-      title: "React.js Development",
-      students: 23,
-      rating: 4.9,
-      status: "active",
-      nextSession: "Tomorrow, 2:00 PM"
+      title: "Epic Coding Session: Building React in 60 Seconds! 🔥",
+      thumbnail: "https://picsum.photos/300/170?random=1",
+      views: 3200,
+      likes: 150,
+      comments: 23,
+      duration: 85,
+      uploadedAt: "2 days ago",
+      status: "published",
+      earnings: 15
     },
     {
       id: 2,
-      title: "Node.js Backend",
-      students: 15,
-      rating: 4.8,
-      status: "active", 
-      nextSession: "Friday, 10:00 AM"
-    }
-  ],
-  skillsLearning: [
-    {
-      id: 1,
-      title: "UI/UX Design",
-      teacher: "Emma Watson",
-      progress: 75,
-      nextSession: "Wednesday, 6:00 PM",
-      status: "active"
+      title: "Mind-Blowing Magic Trick Tutorial ✨",
+      thumbnail: "https://picsum.photos/300/170?random=2",
+      views: 1800,
+      likes: 89,
+      comments: 12,
+      duration: 73,
+      uploadedAt: "5 days ago",
+      status: "published",
+      earnings: 8
     },
     {
-      id: 2,
-      title: "Spanish Conversation",
-      teacher: "Carlos Rodriguez",
-      progress: 40,
-      nextSession: "Thursday, 4:00 PM",
-      status: "active"
+      id: 3,
+      title: "AI Explained in Under 2 Minutes 🤖",
+      thumbnail: "https://picsum.photos/300/170?random=3",
+      views: 5600,
+      likes: 420,
+      comments: 78,
+      duration: 165,
+      uploadedAt: "1 week ago",
+      status: "published",
+      earnings: 25
     }
   ],
-  recentMessages: [
-    {
-      id: 1,
-      from: "John Doe",
-      message: "Thanks for the React lesson! Very helpful.",
-      time: "2 hours ago",
-      avatar: "/api/placeholder/40/40"
-    },
-    {
-      id: 2,
-      from: "Emma Watson",
-      message: "Ready for tomorrow's UI/UX session?",
-      time: "5 hours ago", 
-      avatar: "/api/placeholder/40/40"
-    }
-  ],
-  upcomingSessions: [
-    {
-      id: 1,
-      title: "React.js - Advanced Patterns",
-      type: "teaching",
-      participant: "Alice Smith",
-      time: "Tomorrow, 2:00 PM",
-      duration: "1.5 hours"
-    },
-    {
-      id: 2,
-      title: "UI/UX Design Fundamentals",
-      type: "learning",
-      participant: "Emma Watson",
-      time: "Wednesday, 6:00 PM",
-      duration: "2 hours"
-    }
-  ],
-  exchangeRequests: [
-    {
-      id: 1,
-      requester: "Mike Johnson",
-      requestedSkill: "Python Development",
-      offeredSkill: "Digital Marketing",
-      message: "Hi! I'd love to learn Python in exchange for digital marketing lessons.",
-      time: "1 day ago",
-      avatar: "/api/placeholder/40/40"
-    }
+  analytics: {
+    viewsThisWeek: [120, 150, 89, 200, 310, 280, 195],
+    topCountries: ["United States", "India", "Germany", "Brazil", "Canada"],
+    deviceTypes: { mobile: 65, desktop: 30, tablet: 5 }
+  },
+  notifications: [
+    { id: 1, type: "milestone", message: "Congratulations! Your video reached 1K views", time: "2 hours ago" },
+    { id: 2, type: "comment", message: "John commented on 'Epic Coding Session'", time: "4 hours ago" },
+    { id: 3, type: "like", message: "Your video got 50 new likes today!", time: "6 hours ago" }
   ]
 };
 
 export default function Dashboard() {
-  const { user } = useAuth(); 
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState(0);
-  
+  const [menuAnchor, setMenuAnchor] = useState(null);
+  const [selectedVideo, setSelectedVideo] = useState(null);
+
   const handleTabChange = (event, newValue) => {
     setActiveTab(newValue);
   };
 
-  const dashboardData = mockDashboardData; // In real app, fetch from API
+  const handleVideoMenu = (event, video) => {
+    event.stopPropagation();
+    setSelectedVideo(video);
+    setMenuAnchor(event.currentTarget);
+  };
+
+  const handleMenuClose = () => {
+    setMenuAnchor(null);
+    setSelectedVideo(null);
+  };
+
+  const formatNumber = (num) => {
+    if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
+    if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
+    return num.toString();
+  };
+
+  const formatDuration = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
 
   return (
     <Container maxWidth="xl" sx={{ py: 4 }}>
+      {/* Header */}
       <Box sx={{ mb: 4 }}>
         <Typography variant="h3" gutterBottom fontWeight="bold">
-          Welcome back, {user?.fullName || "User"}! 🚀
+          Welcome back, {user?.fullName || "Creator"}! 🎬
         </Typography>
         <Typography variant="h6" color="text.secondary">
-          Track your skill exchanges and continue your learning journey
+          Track your video performance and grow your audience
         </Typography>
       </Box>
 
@@ -157,46 +156,46 @@ export default function Dashboard() {
       <Grid container spacing={3} sx={{ mb: 4 }}>
         {[
           { 
-            label: "Skills Offered", 
-            value: dashboardData.stats.skillsOffered, 
-            icon: <SchoolIcon />,
+            label: "Total Videos", 
+            value: mockDashboardData.stats.totalVideos, 
+            icon: <VideoIcon />,
             color: "primary.main",
-            change: "+2 this month"
+            change: "+2 this week"
           },
           { 
-            label: "Skills Learning", 
-            value: dashboardData.stats.skillsLearning, 
-            icon: <TrendingIcon />,
+            label: "Total Views", 
+            value: formatNumber(mockDashboardData.stats.totalViews), 
+            icon: <ViewIcon />,
             color: "success.main",
-            change: "+1 this month"
+            change: "+1.2K this week"
           },
           { 
-            label: "Total Students", 
-            value: dashboardData.stats.totalStudents, 
-            icon: <PeopleIcon />,
-            color: "warning.main",
-            change: "+8 this week"
-          },
-          { 
-            label: "Overall Rating", 
-            value: dashboardData.stats.totalRating, 
-            icon: <StarIcon />,
+            label: "Total Likes", 
+            value: formatNumber(mockDashboardData.stats.totalLikes), 
+            icon: <LikeIcon />,
             color: "error.main",
-            change: "↑0.1 this month"
+            change: "+89 this week"
           },
           { 
-            label: "Active Exchanges", 
-            value: dashboardData.stats.activeExchanges, 
-            icon: <ExchangeIcon />,
+            label: "Credits Earned", 
+            value: mockDashboardData.stats.creditsEarned, 
+            icon: <CreditIcon />,
+            color: "warning.main",
+            change: "+15 this week"
+          },
+          { 
+            label: "Watch Time", 
+            value: `${mockDashboardData.stats.watchTimeHours}h`, 
+            icon: <TrendingIcon />,
             color: "info.main",
-            change: "+2 new"
+            change: "+23h this week"
           },
           { 
-            label: "Skill Credits", 
-            value: dashboardData.stats.credits, 
-            icon: <TrophyIcon />,
+            label: "Avg Rating", 
+            value: mockDashboardData.stats.avgRating, 
+            icon: <StarIcon />,
             color: "secondary.main",
-            change: "+12 earned"
+            change: "↑0.2 this month"
           }
         ].map((stat, index) => (
           <Grid item xs={12} sm={6} md={4} lg={2} key={stat.label}>
@@ -205,7 +204,13 @@ export default function Dashboard() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: index * 0.1 }}
             >
-              <Card sx={{ height: "100%" }}>
+              <Card 
+                sx={{ 
+                  height: "100%",
+                  transition: "all 0.3s ease",
+                  "&:hover": { transform: "translateY(-4px)", boxShadow: 4 }
+                }}
+              >
                 <CardContent>
                   <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
                     <Box 
@@ -237,175 +242,196 @@ export default function Dashboard() {
       </Grid>
 
       <Grid container spacing={4}>
-        {/* Main Content Area */}
+        {/* Main Content */}
         <Grid item xs={12} lg={8}>
           <Paper sx={{ mb: 3 }}>
             <Tabs value={activeTab} onChange={handleTabChange}>
-              <Tab label="Skills I'm Teaching" />
-              <Tab label="Skills I'm Learning" />
-              <Tab label="Exchange Requests" />
+              <Tab label="My Videos" />
+              <Tab label="Analytics" />
+              <Tab label="Comments & Reviews" />
             </Tabs>
 
             <Box sx={{ p: 3 }}>
-              {/* Skills Teaching Tab */}
+              {/* My Videos Tab */}
               {activeTab === 0 && (
                 <Stack spacing={3}>
                   <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <Typography variant="h6">
-                      Skills You're Teaching ({dashboardData.skillsOffering.length})
+                      Your Videos ({mockDashboardData.recentVideos.length})
                     </Typography>
-                    <Button variant="contained" startIcon={<AddIcon />}>
-                      Offer New Skill
+                    <Button 
+                      variant="contained" 
+                      startIcon={<UploadIcon />}
+                      onClick={() => navigate("/upload")}
+                    >
+                      Upload New Video
                     </Button>
                   </Box>
 
-                  {dashboardData.skillsOffering.map((skill) => (
-                    <Card key={skill.id} variant="outlined">
-                      <CardContent>
-                        <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
-                          <Box>
-                            <Typography variant="h6">{skill.title}</Typography>
-                            <Typography color="text.secondary">
-                              {skill.students} students • Rating: {skill.rating} ⭐
-                            </Typography>
-                          </Box>
-                          <Chip 
-                            label={skill.status} 
-                            color="success" 
-                            variant="outlined" 
-                          />
-                        </Box>
-                        
-                        <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-                          <CalendarIcon sx={{ fontSize: 16, mr: 1, color: "text.secondary" }} />
-                          <Typography variant="body2">
-                            Next session: {skill.nextSession}
-                          </Typography>
-                        </Box>
+                  <Grid container spacing={3}>
+                    {mockDashboardData.recentVideos.map((video) => (
+                      <Grid item xs={12} md={6} key={video.id}>
+                        <motion.div
+                          whileHover={{ scale: 1.02 }}
+                          transition={{ duration: 0.2 }}
+                        >
+                          <Card 
+                            sx={{ 
+                              cursor: "pointer",
+                              transition: "all 0.3s ease",
+                              "&:hover": { boxShadow: 4 }
+                            }}
+                            onClick={() => navigate(`/video/${video.id}`)}
+                          >
+                            <Box sx={{ position: "relative" }}>
+                              <CardMedia
+                                component="img"
+                                height="160"
+                                image={video.thumbnail}
+                                alt={video.title}
+                              />
+                              <Chip
+                                label={formatDuration(video.duration)}
+                                size="small"
+                                sx={{
+                                  position: "absolute",
+                                  bottom: 8,
+                                  right: 8,
+                                  bgcolor: "rgba(0,0,0,0.8)",
+                                  color: "white"
+                                }}
+                              />
+                              <IconButton
+                                onClick={(e) => handleVideoMenu(e, video)}
+                                sx={{
+                                  position: "absolute",
+                                  top: 8,
+                                  right: 8,
+                                  bgcolor: "rgba(0,0,0,0.5)",
+                                  color: "white",
+                                  "&:hover": { bgcolor: "rgba(0,0,0,0.8)" }
+                                }}
+                              >
+                                <MoreIcon />
+                              </IconButton>
+                            </Box>
+                            <CardContent>
+                              <Typography variant="subtitle1" fontWeight="bold" noWrap>
+                                {video.title}
+                              </Typography>
+                              
+                              <Box sx={{ display: "flex", alignItems: "center", gap: 2, mt: 1 }}>
+                                <Box sx={{ display: "flex", alignItems: "center" }}>
+                                  <ViewIcon sx={{ fontSize: 16, mr: 0.5, color: "text.secondary" }} />
+                                  <Typography variant="caption">{formatNumber(video.views)}</Typography>
+                                </Box>
+                                <Box sx={{ display: "flex", alignItems: "center" }}>
+                                  <LikeIcon sx={{ fontSize: 16, mr: 0.5, color: "success.main" }} />
+                                  <Typography variant="caption">{video.likes}</Typography>
+                                </Box>
+                                <Box sx={{ display: "flex", alignItems: "center" }}>
+                                  <CommentIcon sx={{ fontSize: 16, mr: 0.5, color: "info.main" }} />
+                                  <Typography variant="caption">{video.comments}</Typography>
+                                </Box>
+                              </Box>
 
-                        <Box sx={{ display: "flex", gap: 1 }}>
-                          <Button size="small" variant="outlined">
-                            View Details
-                          </Button>
-                          <Button size="small">
-                            Manage Students
-                          </Button>
-                        </Box>
-                      </CardContent>
-                    </Card>
-                  ))}
+                              <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mt: 2 }}>
+                                <Typography variant="caption" color="text.secondary">
+                                  {video.uploadedAt}
+                                </Typography>
+                                <Chip 
+                                  label={`+${video.earnings} credits`}
+                                  size="small"
+                                  color="success"
+                                  variant="outlined"
+                                />
+                              </Box>
+                            </CardContent>
+                          </Card>
+                        </motion.div>
+                      </Grid>
+                    ))}
+                  </Grid>
                 </Stack>
               )}
 
-              {/* Skills Learning Tab */}
+              {/* Analytics Tab */}
               {activeTab === 1 && (
                 <Stack spacing={3}>
-                  <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <Typography variant="h6">
-                      Skills You're Learning ({dashboardData.skillsLearning.length})
-                    </Typography>
-                    <Button variant="contained" startIcon={<AddIcon />}>
-                      Find New Skill
-                    </Button>
-                  </Box>
-
-                  {dashboardData.skillsLearning.map((skill) => (
-                    <Card key={skill.id} variant="outlined">
-                      <CardContent>
-                        <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
-                          <Box>
-                            <Typography variant="h6">{skill.title}</Typography>
-                            <Typography color="text.secondary">
-                              Learning from {skill.teacher}
-                            </Typography>
+                  <Typography variant="h6">Video Analytics</Typography>
+                  
+                  <Grid container spacing={3}>
+                    <Grid item xs={12} md={8}>
+                      <Card>
+                        <CardContent>
+                          <Typography variant="h6" gutterBottom>
+                            Views This Week
+                          </Typography>
+                          <Box sx={{ height: 200, display: "flex", alignItems: "end", gap: 1 }}>
+                            {mockDashboardData.analytics.viewsThisWeek.map((views, index) => (
+                              <Box
+                                key={index}
+                                sx={{
+                                  flex: 1,
+                                  height: `${(views / 310) * 160}px`,
+                                  bgcolor: "primary.main",
+                                  borderRadius: 1,
+                                  display: "flex",
+                                  alignItems: "end",
+                                  justifyContent: "center",
+                                  pb: 1
+                                }}
+                              >
+                                <Typography variant="caption" color="white">
+                                  {views}
+                                </Typography>
+                              </Box>
+                            ))}
                           </Box>
-                          <Chip 
-                            label={skill.status} 
-                            color="primary" 
-                            variant="outlined" 
-                          />
-                        </Box>
-                        
-                        <Box sx={{ mb: 2 }}>
-                          <Typography variant="body2" gutterBottom>
-                            Progress: {skill.progress}%
+                        </CardContent>
+                      </Card>
+                    </Grid>
+                    
+                    <Grid item xs={12} md={4}>
+                      <Card>
+                        <CardContent>
+                          <Typography variant="h6" gutterBottom>
+                            Top Countries
                           </Typography>
-                          <LinearProgress
-                            variant="determinate"
-                            value={skill.progress}
-                            sx={{ height: 8, borderRadius: 1 }}
-                          />
-                        </Box>
-
-                        <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-                          <CalendarIcon sx={{ fontSize: 16, mr: 1, color: "text.secondary" }} />
-                          <Typography variant="body2">
-                            Next session: {skill.nextSession}
-                          </Typography>
-                        </Box>
-
-                        <Box sx={{ display: "flex", gap: 1 }}>
-                          <Button size="small" variant="outlined">
-                            View Course
-                          </Button>
-                          <Button size="small">
-                            Message Teacher
-                          </Button>
-                        </Box>
-                      </CardContent>
-                    </Card>
-                  ))}
+                          <Stack spacing={1}>
+                            {mockDashboardData.analytics.topCountries.map((country, index) => (
+                              <Box key={country} sx={{ display: "flex", alignItems: "center" }}>
+                                <Typography variant="body2" sx={{ flex: 1 }}>
+                                  {index + 1}. {country}
+                                </Typography>
+                                <LinearProgress
+                                  variant="determinate"
+                                  value={(5 - index) * 20}
+                                  sx={{ width: 60, mr: 1 }}
+                                />
+                              </Box>
+                            ))}
+                          </Stack>
+                        </CardContent>
+                      </Card>
+                    </Grid>
+                  </Grid>
                 </Stack>
               )}
 
-              {/* Exchange Requests Tab */}
+              {/* Comments Tab */}
               {activeTab === 2 && (
                 <Stack spacing={3}>
-                  <Typography variant="h6">
-                    Pending Exchange Requests ({dashboardData.exchangeRequests.length})
+                  <Typography variant="h6">Recent Comments & Feedback</Typography>
+                  <Typography variant="body1" color="text.secondary">
+                    Comments and feedback management coming soon! 💬
                   </Typography>
-
-                  {dashboardData.exchangeRequests.map((request) => (
-                    <Card key={request.id} variant="outlined">
-                      <CardContent>
-                        <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-                          <Avatar src={request.avatar} sx={{ mr: 2 }} />
-                          <Box sx={{ flexGrow: 1 }}>
-                            <Typography variant="subtitle1" fontWeight="bold">
-                              {request.requester}
-                            </Typography>
-                            <Typography variant="body2" color="text.secondary">
-                              {request.time}
-                            </Typography>
-                          </Box>
-                        </Box>
-
-                        <Box sx={{ mb: 2 }}>
-                          <Typography variant="body2" gutterBottom>
-                            <strong>Wants to learn:</strong> {request.requestedSkill}
-                          </Typography>
-                          <Typography variant="body2" gutterBottom>
-                            <strong>Offers to teach:</strong> {request.offeredSkill}
-                          </Typography>
-                          <Typography variant="body2" sx={{ mt: 1 }}>
-                            "{request.message}"
-                          </Typography>
-                        </Box>
-
-                        <Box sx={{ display: "flex", gap: 1 }}>
-                          <Button size="small" variant="contained" color="success">
-                            Accept
-                          </Button>
-                          <Button size="small" variant="outlined" color="error">
-                            Decline
-                          </Button>
-                          <Button size="small" variant="outlined">
-                            Message
-                          </Button>
-                        </Box>
-                      </CardContent>
-                    </Card>
-                  ))}
+                  <Box sx={{ textAlign: "center", py: 4 }}>
+                    <CommentIcon sx={{ fontSize: 80, color: "text.secondary", mb: 2 }} />
+                    <Typography variant="body1" color="text.secondary">
+                      No recent comments to display
+                    </Typography>
+                  </Box>
                 </Stack>
               )}
             </Box>
@@ -415,64 +441,6 @@ export default function Dashboard() {
         {/* Sidebar */}
         <Grid item xs={12} lg={4}>
           <Stack spacing={3}>
-            {/* Upcoming Sessions */}
-            <Card>
-              <CardContent>
-                <Typography variant="h6" gutterBottom>
-                  Upcoming Sessions
-                </Typography>
-                <List dense>
-                  {dashboardData.upcomingSessions.map((session) => (
-                    <ListItem key={session.id} sx={{ px: 0 }}>
-                      <ListItemAvatar>
-                        <Avatar sx={{ bgcolor: session.type === "teaching" ? "primary.main" : "success.main" }}>
-                          {session.type === "teaching" ? <SchoolIcon /> : <TrendingIcon />}
-                        </Avatar>
-                      </ListItemAvatar>
-                      <ListItemText
-                        primary={session.title}
-                        secondary={`${session.time} • ${session.duration}`}
-                      />
-                    </ListItem>
-                  ))}
-                </List>
-                <Button variant="outlined" fullWidth sx={{ mt: 2 }}>
-                  View All Sessions
-                </Button>
-              </CardContent>
-            </Card>
-
-            {/* Recent Messages */}
-            <Card>
-              <CardContent>
-                <Typography variant="h6" gutterBottom>
-                  Recent Messages
-                </Typography>
-                <List dense>
-                  {dashboardData.recentMessages.map((message, index) => (
-                    <Box key={message.id}>
-                      <ListItem sx={{ px: 0 }}>
-                        <ListItemAvatar>
-                          <Avatar src={message.avatar} />
-                        </ListItemAvatar>
-                        <ListItemText
-                          primary={message.from}
-                          secondary={message.message}
-                        />
-                        <Typography variant="caption" color="text.secondary">
-                          {message.time}
-                        </Typography>
-                      </ListItem>
-                      {index < dashboardData.recentMessages.length - 1 && <Divider />}
-                    </Box>
-                  ))}
-                </List>
-                <Button variant="outlined" fullWidth sx={{ mt: 2 }}>
-                  View All Messages
-                </Button>
-              </CardContent>
-            </Card>
-
             {/* Quick Actions */}
             <Card>
               <CardContent>
@@ -480,24 +448,93 @@ export default function Dashboard() {
                   Quick Actions
                 </Typography>
                 <Stack spacing={2}>
-                  <Button variant="contained" startIcon={<AddIcon />} fullWidth>
-                    Offer New Skill
+                  <Button 
+                    variant="contained" 
+                    startIcon={<UploadIcon />} 
+                    fullWidth
+                    onClick={() => navigate("/upload")}
+                  >
+                    Upload New Video
                   </Button>
-                  <Button variant="outlined" startIcon={<ExchangeIcon />} fullWidth>
-                    Browse Skills
+                  <Button variant="outlined" startIcon={<AnalyticsIcon />} fullWidth>
+                    View Analytics
                   </Button>
-                  <Button variant="outlined" startIcon={<MessageIcon />} fullWidth>
-                    Messages
+                  <Button variant="outlined" startIcon={<CreditIcon />} fullWidth>
+                    Earnings Report
                   </Button>
-                  <Button variant="outlined" startIcon={<CalendarIcon />} fullWidth>
-                    Schedule
-                  </Button>
+                </Stack>
+              </CardContent>
+            </Card>
+
+            {/* Recent Notifications */}
+            <Card>
+              <CardContent>
+                <Typography variant="h6" gutterBottom>
+                  Recent Activity
+                </Typography>
+                <List dense>
+                  {mockDashboardData.notifications.map((notification) => (
+                    <ListItem key={notification.id} sx={{ px: 0 }}>
+                      <ListItemText
+                        primary={notification.message}
+                        secondary={notification.time}
+                        primaryTypographyProps={{ variant: "body2" }}
+                        secondaryTypographyProps={{ variant: "caption" }}
+                      />
+                    </ListItem>
+                  ))}
+                </List>
+                <Button variant="outlined" size="small" fullWidth sx={{ mt: 2 }}>
+                  View All Activity
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Upload Tips */}
+            <Card sx={{ bgcolor: "info.light" }}>
+              <CardContent>
+                <Typography variant="h6" gutterBottom>
+                  💡 Upload Tips
+                </Typography>
+                <Stack spacing={1}>
+                  <Typography variant="body2">
+                    • Keep videos under {user?.isPremium ? "180" : "90"} seconds
+                  </Typography>
+                  <Typography variant="body2">
+                    • Use catchy titles with emojis
+                  </Typography>
+                  <Typography variant="body2">
+                    • Upload consistently for more views
+                  </Typography>
+                  <Typography variant="body2">
+                    • Engage with your audience in comments
+                  </Typography>
                 </Stack>
               </CardContent>
             </Card>
           </Stack>
         </Grid>
       </Grid>
+
+      {/* Video Menu */}
+      <Menu
+        anchorEl={menuAnchor}
+        open={Boolean(menuAnchor)}
+        onClose={handleMenuClose}
+      >
+        <MenuItem onClick={handleMenuClose}>
+          <EditIcon sx={{ mr: 2 }} />
+          Edit Video
+        </MenuItem>
+        <MenuItem onClick={handleMenuClose}>
+          <ShareIcon sx={{ mr: 2 }} />
+          Share Video
+        </MenuItem>
+        <MenuItem onClick={handleMenuClose} sx={{ color: "error.main" }}>
+          <DeleteIcon sx={{ mr: 2 }} />
+          Delete Video
+        </MenuItem>
+      </Menu>
     </Container>
   );
 }
