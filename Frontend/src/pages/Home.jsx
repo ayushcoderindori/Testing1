@@ -1,304 +1,606 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Container,
   Typography,
-  TextField,
-  Button,
   Grid,
   Card,
   CardContent,
-  CardActions,
+  CardMedia,
   Chip,
   Avatar,
-  InputAdornment,
-  Paper,
-  Stack,
   IconButton,
+  Fab,
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  Button,
+  Tabs,
+  Tab,
+  Stack,
+  Badge,
+  Tooltip,
+  LinearProgress,
 } from "@mui/material";
 import {
-  Search as SearchIcon,
-  Star as StarIcon,
-  LocationOn as LocationIcon,
-  AccessTime as TimeIcon,
+  PlayArrow as PlayIcon,
+  Favorite as LikeIcon,
+  FavoriteBorder as LikeBorderIcon,
+  ThumbDown as DislikeIcon,
+  Comment as CommentIcon,
+  Share as ShareIcon,
+  Upload as UploadIcon,
   TrendingUp as TrendingIcon,
+  Whatshot as FireIcon,
+  AccessTime as TimeIcon,
+  Visibility as ViewIcon,
+  Star as StarIcon,
+  MonetizationOn as CreditIcon,
+  Close as CloseIcon,
 } from "@mui/icons-material";
 import { useQuery } from "@tanstack/react-query";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import axios from "../api/axios.js";
+import useAuth from "../auth/useAuth.js";
 
-const skillCategories = [
-  "Web Development", "Mobile Development", "UI/UX Design", "Data Science",
-  "Digital Marketing", "Photography", "Music Production", "Language Learning",
-  "Writing", "Cooking", "Fitness Training", "Business Consulting"
-];
-
-const featuredSkills = [
+const mockVideos = [
   {
     id: 1,
-    title: "React.js Development",
-    description: "Expert React developer offering to teach modern React patterns, hooks, and state management in exchange for UI/UX design lessons.",
-    user: { name: "Sarah Chen", avatar: "/api/placeholder/40/40", rating: 4.9, location: "San Francisco" },
-    category: "Web Development",
-    timeCommitment: "2-3 hours/week",
-    tags: ["React", "JavaScript", "Frontend"],
-    seeking: "UI/UX Design",
-    type: "Teaching"
+    title: "Epic Coding Session: Building React in 60 Seconds! 🔥",
+    thumbnail: "https://picsum.photos/400/225?random=1",
+    duration: 85,
+    views: 12500,
+    likes: 890,
+    dislikes: 12,
+    uploadedAt: "2 hours ago",
+    creator: {
+      username: "codemaster_alex",
+      avatar: "https://picsum.photos/40/40?random=101",
+      isVerified: true,
+      subscribers: 45200
+    },
+    category: "Tech",
+    tags: ["coding", "react", "tutorial"],
+    isPremium: false
   },
   {
     id: 2,
-    title: "Spanish Conversation Practice",
-    description: "Native Spanish speaker looking to improve English skills while helping others become fluent in Spanish through regular conversation sessions.",
-    user: { name: "Carlos Rodriguez", avatar: "/api/placeholder/40/40", rating: 4.8, location: "Madrid" },
-    category: "Language Learning",
-    timeCommitment: "1 hour/week",
-    tags: ["Spanish", "Conversation", "Native Speaker"],
-    seeking: "English Practice",
-    type: "Exchange"
+    title: "Mind-Blowing Magic Trick That Will Amaze You! ✨",
+    thumbnail: "https://picsum.photos/400/225?random=2",
+    duration: 73,
+    views: 8900,
+    likes: 1200,
+    dislikes: 5,
+    uploadedAt: "5 hours ago",
+    creator: {
+      username: "magic_sarah",
+      avatar: "https://picsum.photos/40/40?random=102",
+      isVerified: false,
+      subscribers: 15600
+    },
+    category: "Entertainment",
+    tags: ["magic", "amazing", "viral"],
+    isPremium: false
   },
   {
     id: 3,
-    title: "Professional Photography",
-    description: "Professional photographer offering portrait and event photography lessons in exchange for social media marketing expertise.",
-    user: { name: "Emma Thompson", avatar: "/api/placeholder/40/40", rating: 5.0, location: "London" },
-    category: "Photography",
-    timeCommitment: "4-6 hours/week",
-    tags: ["Portrait", "Events", "Professional"],
-    seeking: "Social Media Marketing",
-    type: "Teaching"
+    title: "PREMIUM: Advanced AI Concepts Explained (3 Minutes) 🤖",
+    thumbnail: "https://picsum.photos/400/225?random=3",
+    duration: 165,
+    views: 25600,
+    likes: 2100,
+    dislikes: 45,
+    uploadedAt: "1 day ago",
+    creator: {
+      username: "ai_guru_mike",
+      avatar: "https://picsum.photos/40/40?random=103",
+      isVerified: true,
+      subscribers: 125000
+    },
+    category: "Education",
+    tags: ["AI", "machine learning", "premium"],
+    isPremium: true
+  },
+  {
+    id: 4,
+    title: "VIRAL Dance Challenge Everyone's Doing! 💃",
+    thumbnail: "https://picsum.photos/400/225?random=4",
+    duration: 45,
+    views: 45600,
+    likes: 3200,
+    dislikes: 89,
+    uploadedAt: "3 hours ago",
+    creator: {
+      username: "dance_queen_emma",
+      avatar: "https://picsum.photos/40/40?random=104",
+      isVerified: true,
+      subscribers: 89500
+    },
+    category: "Dance",
+    tags: ["dance", "viral", "trending"],
+    isPremium: false
   }
 ];
 
-export default function Home() {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("");
+const categories = ["All", "Tech", "Entertainment", "Education", "Dance", "Gaming", "Art", "Music"];
 
-  const { data: skills = featuredSkills, isPending } = useQuery({
-    queryKey: ["skills", searchTerm, selectedCategory],
+export default function Home() {
+  const { user } = useAuth();
+  const [selectedCategory, setSelectedCategory] = useState("All");
+  const [selectedVideo, setSelectedVideo] = useState(null);
+  const [playingVideo, setPlayingVideo] = useState(null);
+  const [likedVideos, setLikedVideos] = useState(new Set());
+  const [dislikedVideos, setDislikedVideos] = useState(new Set());
+
+  const { data: videos = mockVideos, isPending } = useQuery({
+    queryKey: ["videos", selectedCategory],
     queryFn: async () => {
-      // For now, return mock data. Later connect to actual API
-      return featuredSkills.filter(skill => 
-        (!searchTerm || skill.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-         skill.description.toLowerCase().includes(searchTerm.toLowerCase())) &&
-        (!selectedCategory || skill.category === selectedCategory)
+      // Simulate API call
+      return mockVideos.filter(video => 
+        selectedCategory === "All" || video.category === selectedCategory
       );
     },
   });
 
+  const handleVideoPlay = (video) => {
+    if (!user) {
+      // Redirect to login
+      return;
+    }
+    
+    if (video.isPremium && !user.isPremium) {
+      // Show premium upgrade dialog
+      return;
+    }
+    
+    if (user.credits < 1 && !user.isPremium) {
+      // Show insufficient credits dialog
+      return;
+    }
+    
+    setSelectedVideo(video);
+    setPlayingVideo(video.id);
+  };
+
+  const handleLike = (videoId) => {
+    setLikedVideos(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(videoId)) {
+        newSet.delete(videoId);
+      } else {
+        newSet.add(videoId);
+        setDislikedVideos(prevDislikes => {
+          const newDislikes = new Set(prevDislikes);
+          newDislikes.delete(videoId);
+          return newDislikes;
+        });
+      }
+      return newSet;
+    });
+  };
+
+  const handleDislike = (videoId) => {
+    setDislikedVideos(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(videoId)) {
+        newSet.delete(videoId);
+      } else {
+        newSet.add(videoId);
+        setLikedVideos(prevLikes => {
+          const newLikes = new Set(prevLikes);
+          newLikes.delete(videoId);
+          return newLikes;
+        });
+      }
+      return newSet;
+    });
+  };
+
+  const formatDuration = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const formatNumber = (num) => {
+    if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
+    if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
+    return num.toString();
+  };
+
   return (
-    <Box>
-      {/* Hero Section */}
+    <Box sx={{ bgcolor: "background.default", minHeight: "100vh" }}>
+      {/* Hero Section with User Credits */}
       <Box
         sx={{
           background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
           color: "white",
-          py: 8,
+          py: 6,
           position: "relative",
           overflow: "hidden"
         }}
       >
-        <Container maxWidth="lg">
+        <Box
+          sx={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: "url('https://picsum.photos/1920/400?random=bg') center/cover",
+            opacity: 0.1,
+            animation: "float 20s ease-in-out infinite"
+          }}
+        />
+        
+        <Container maxWidth="lg" sx={{ position: "relative", zIndex: 1 }}>
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
           >
-            <Typography variant="h2" component="h1" gutterBottom align="center" fontWeight="bold">
-              Exchange Skills, Transform Lives
-            </Typography>
-            <Typography variant="h5" gutterBottom align="center" sx={{ mb: 4, opacity: 0.9 }}>
-              Connect with people worldwide to teach what you know and learn what you need
-            </Typography>
-            
-            {/* Search Bar */}
-            <Paper
-              sx={{
-                p: 2,
-                maxWidth: 600,
-                mx: "auto",
-                borderRadius: 3,
-                background: "rgba(255,255,255,0.95)",
-                backdropFilter: "blur(10px)"
-              }}
-            >
-              <TextField
-                fullWidth
-                placeholder="What skill do you want to learn today?"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <SearchIcon color="primary" />
-                    </InputAdornment>
-                  ),
-                  sx: { borderRadius: 2 }
-                }}
-                variant="outlined"
-              />
-            </Paper>
-          </motion.div>
-        </Container>
-      </Box>
+            <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 4 }}>
+              <Box>
+                <Typography variant="h2" component="h1" gutterBottom fontWeight="bold">
+                  🎬 Welcome to VideoVault
+                </Typography>
+                <Typography variant="h5" sx={{ opacity: 0.9 }}>
+                  Where every video is worth watching ✨
+                </Typography>
+              </Box>
+              
+              {user && (
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: 0.5, type: "spring" }}
+                >
+                  <Card sx={{ p: 3, bgcolor: "rgba(255,255,255,0.1)", backdropFilter: "blur(10px)" }}>
+                    <Box sx={{ display: "flex", alignItems: "center", color: "white" }}>
+                      <CreditIcon sx={{ mr: 1, color: "#FFD700" }} />
+                      <Typography variant="h4" fontWeight="bold">
+                        {user.credits || 25}
+                      </Typography>
+                      <Typography variant="body2" sx={{ ml: 1, opacity: 0.8 }}>
+                        Credits
+                      </Typography>
+                    </Box>
+                    <Typography variant="caption" sx={{ opacity: 0.7 }}>
+                      Watch: -1 • Upload: +5
+                    </Typography>
+                  </Card>
+                </motion.div>
+              )}
+            </Box>
 
-      <Container maxWidth="lg" sx={{ py: 6 }}>
-        {/* Category Filter */}
-        <Box sx={{ mb: 4 }}>
-          <Typography variant="h5" gutterBottom>
-            Browse by Category
-          </Typography>
-          <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", gap: 1 }}>
-            <Chip
-              label="All Categories"
-              onClick={() => setSelectedCategory("")}
-              color={selectedCategory === "" ? "primary" : "default"}
-              variant={selectedCategory === "" ? "filled" : "outlined"}
-            />
-            {skillCategories.map((category) => (
-              <Chip
-                key={category}
-                label={category}
-                onClick={() => setSelectedCategory(category)}
-                color={selectedCategory === category ? "primary" : "default"}
-                variant={selectedCategory === category ? "filled" : "outlined"}
-              />
-            ))}
-          </Stack>
-        </Box>
-
-        {/* Skills Grid */}
-        <Box sx={{ mb: 4 }}>
-          <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
-            <TrendingIcon color="primary" sx={{ mr: 1 }} />
-            <Typography variant="h5">
-              {selectedCategory ? `${selectedCategory} Skills` : "Featured Skills"}
-            </Typography>
-          </Box>
-          
-          {isPending ? (
-            <Typography>Loading skills...</Typography>
-          ) : skills.length === 0 ? (
-            <Paper sx={{ p: 4, textAlign: "center" }}>
-              <Typography variant="h6" color="text.secondary">
-                No skills found matching your criteria
-              </Typography>
-              <Button
-                variant="outlined"
-                sx={{ mt: 2 }}
-                onClick={() => { setSearchTerm(""); setSelectedCategory(""); }}
-              >
-                Clear Filters
-              </Button>
-            </Paper>
-          ) : (
-            <Grid container spacing={3}>
-              {skills.map((skill, index) => (
-                <Grid key={skill.id} item xs={12} md={6} lg={4}>
+            {/* Quick Stats */}
+            <Grid container spacing={2}>
+              {[
+                { label: "Videos Today", value: "1.2K", icon: "🎥" },
+                { label: "Active Creators", value: "850", icon: "👥" },
+                { label: "Credits Earned", value: "45K", icon: "💰" },
+                { label: "Premium Users", value: "320", icon: "⭐" }
+              ].map((stat, index) => (
+                <Grid item xs={6} md={3} key={stat.label}>
                   <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: index * 0.1 }}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.3 + index * 0.1 }}
                   >
-                    <Card 
-                      sx={{ 
-                        height: "100%",
-                        display: "flex",
-                        flexDirection: "column",
-                        transition: "all 0.3s ease",
-                        "&:hover": {
-                          transform: "translateY(-4px)",
-                          boxShadow: 4
-                        }
-                      }}
-                    >
-                      <CardContent sx={{ flexGrow: 1 }}>
-                        <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-                          <Avatar src={skill.user.avatar} sx={{ mr: 2 }} />
-                          <Box sx={{ flexGrow: 1 }}>
-                            <Typography variant="subtitle2">{skill.user.name}</Typography>
-                            <Box sx={{ display: "flex", alignItems: "center" }}>
-                              <StarIcon sx={{ fontSize: 16, color: "warning.main", mr: 0.5 }} />
-                              <Typography variant="caption">{skill.user.rating}</Typography>
-                              <LocationIcon sx={{ fontSize: 14, color: "text.secondary", ml: 1, mr: 0.5 }} />
-                              <Typography variant="caption" color="text.secondary">
-                                {skill.user.location}
-                              </Typography>
-                            </Box>
-                          </Box>
-                          <Chip
-                            label={skill.type}
-                            size="small"
-                            color={skill.type === "Exchange" ? "secondary" : "primary"}
-                            variant="outlined"
-                          />
-                        </Box>
-                        
-                        <Typography variant="h6" gutterBottom>
-                          {skill.title}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                          {skill.description}
-                        </Typography>
-                        
-                        <Box sx={{ mb: 2 }}>
-                          <Typography variant="caption" color="primary" fontWeight="bold">
-                            SEEKING: {skill.seeking}
-                          </Typography>
-                        </Box>
-                        
-                        <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-                          <TimeIcon sx={{ fontSize: 16, color: "text.secondary", mr: 0.5 }} />
-                          <Typography variant="caption" color="text.secondary">
-                            {skill.timeCommitment}
-                          </Typography>
-                        </Box>
-                        
-                        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
-                          {skill.tags.map((tag) => (
-                            <Chip key={tag} label={tag} size="small" variant="outlined" />
-                          ))}
-                        </Box>
-                      </CardContent>
-                      
-                      <CardActions>
-                        <Button size="small" variant="contained" fullWidth>
-                          Connect & Barter
-                        </Button>
-                      </CardActions>
-                    </Card>
+                    <Box sx={{ textAlign: "center" }}>
+                      <Typography variant="h3">{stat.icon}</Typography>
+                      <Typography variant="h5" fontWeight="bold">
+                        {stat.value}
+                      </Typography>
+                      <Typography variant="body2" sx={{ opacity: 0.8 }}>
+                        {stat.label}
+                      </Typography>
+                    </Box>
                   </motion.div>
                 </Grid>
               ))}
             </Grid>
-          )}
+          </motion.div>
+        </Container>
+      </Box>
+
+      <Container maxWidth="xl" sx={{ py: 4 }}>
+        {/* Category Tabs */}
+        <Box sx={{ mb: 4 }}>
+          <Tabs
+            value={selectedCategory}
+            onChange={(e, value) => setSelectedCategory(value)}
+            variant="scrollable"
+            scrollButtons="auto"
+            sx={{
+              "& .MuiTab-root": {
+                minWidth: "auto",
+                fontWeight: "bold",
+                borderRadius: 3,
+                mx: 0.5
+              }
+            }}
+          >
+            {categories.map((category) => (
+              <Tab
+                key={category}
+                label={category}
+                value={category}
+                icon={category === "All" ? <TrendingIcon /> : <FireIcon />}
+                iconPosition="start"
+              />
+            ))}
+          </Tabs>
         </Box>
 
-        {/* Call to Action */}
-        <Paper
-          sx={{
-            p: 4,
-            textAlign: "center",
-            background: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
-            color: "white",
-            borderRadius: 3
-          }}
-        >
-          <Typography variant="h4" gutterBottom>
-            Ready to Start Your Skill Journey?
-          </Typography>
-          <Typography variant="body1" sx={{ mb: 3, opacity: 0.9 }}>
-            Join thousands of learners and teachers exchanging skills worldwide
-          </Typography>
-          <Stack direction={{ xs: "column", sm: "row" }} spacing={2} justifyContent="center">
-            <Button variant="contained" size="large" sx={{ bgcolor: "white", color: "primary.main" }}>
-              Offer a Skill
-            </Button>
-            <Button variant="outlined" size="large" sx={{ borderColor: "white", color: "white" }}>
-              Find a Teacher
-            </Button>
-          </Stack>
-        </Paper>
+        {/* Video Grid */}
+        <AnimatePresence>
+          <Grid container spacing={3}>
+            {videos.map((video, index) => (
+              <Grid item xs={12} sm={6} md={4} lg={3} key={video.id}>
+                <motion.div
+                  layout
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  transition={{ duration: 0.3, delay: index * 0.05 }}
+                  whileHover={{ y: -8, transition: { duration: 0.2 } }}
+                >
+                  <Card
+                    sx={{
+                      position: "relative",
+                      cursor: "pointer",
+                      transition: "all 0.3s ease",
+                      overflow: "hidden",
+                      "&:hover": {
+                        boxShadow: "0 12px 24px rgba(0,0,0,0.15)",
+                        "& .video-overlay": {
+                          opacity: 1
+                        }
+                      }
+                    }}
+                    onClick={() => handleVideoPlay(video)}
+                  >
+                    {/* Thumbnail with Play Overlay */}
+                    <Box sx={{ position: "relative" }}>
+                      <CardMedia
+                        component="img"
+                        height="180"
+                        image={video.thumbnail}
+                        alt={video.title}
+                      />
+                      
+                      {/* Duration Badge */}
+                      <Chip
+                        label={formatDuration(video.duration)}
+                        size="small"
+                        sx={{
+                          position: "absolute",
+                          bottom: 8,
+                          right: 8,
+                          bgcolor: "rgba(0,0,0,0.8)",
+                          color: "white",
+                          fontWeight: "bold"
+                        }}
+                      />
+
+                      {/* Premium Badge */}
+                      {video.isPremium && (
+                        <Chip
+                          label="PREMIUM"
+                          size="small"
+                          sx={{
+                            position: "absolute",
+                            top: 8,
+                            left: 8,
+                            bgcolor: "#FFD700",
+                            color: "black",
+                            fontWeight: "bold"
+                          }}
+                        />
+                      )}
+
+                      {/* Play Overlay */}
+                      <Box
+                        className="video-overlay"
+                        sx={{
+                          position: "absolute",
+                          top: 0,
+                          left: 0,
+                          right: 0,
+                          bottom: 0,
+                          bgcolor: "rgba(0,0,0,0.5)",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          opacity: 0,
+                          transition: "opacity 0.3s ease"
+                        }}
+                      >
+                        <IconButton
+                          size="large"
+                          sx={{
+                            bgcolor: "primary.main",
+                            color: "white",
+                            "&:hover": { bgcolor: "primary.dark", transform: "scale(1.1)" }
+                          }}
+                        >
+                          <PlayIcon sx={{ fontSize: 40 }} />
+                        </IconButton>
+                      </Box>
+                    </Box>
+
+                    <CardContent sx={{ p: 2 }}>
+                      {/* Creator Info */}
+                      <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
+                        <Avatar src={video.creator.avatar} sx={{ width: 32, height: 32, mr: 1 }} />
+                        <Box sx={{ flexGrow: 1, minWidth: 0 }}>
+                          <Typography variant="caption" color="text.secondary" noWrap>
+                            {video.creator.username}
+                            {video.creator.isVerified && " ✓"}
+                          </Typography>
+                        </Box>
+                        <Typography variant="caption" color="text.secondary">
+                          {video.uploadedAt}
+                        </Typography>
+                      </Box>
+
+                      {/* Title */}
+                      <Typography
+                        variant="subtitle2"
+                        fontWeight="bold"
+                        sx={{
+                          mb: 1,
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          display: "-webkit-box",
+                          WebkitLineClamp: 2,
+                          WebkitBoxOrient: "vertical",
+                          lineHeight: 1.3
+                        }}
+                      >
+                        {video.title}
+                      </Typography>
+
+                      {/* Stats */}
+                      <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                          <Box sx={{ display: "flex", alignItems: "center" }}>
+                            <ViewIcon sx={{ fontSize: 14, color: "text.secondary", mr: 0.5 }} />
+                            <Typography variant="caption" color="text.secondary">
+                              {formatNumber(video.views)}
+                            </Typography>
+                          </Box>
+                          <Box sx={{ display: "flex", alignItems: "center" }}>
+                            <LikeIcon sx={{ fontSize: 14, color: "success.main", mr: 0.5 }} />
+                            <Typography variant="caption" color="text.secondary">
+                              {formatNumber(video.likes)}
+                            </Typography>
+                          </Box>
+                        </Box>
+
+                        {/* Action Buttons */}
+                        <Box sx={{ display: "flex", gap: 0.5 }}>
+                          <IconButton
+                            size="small"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleLike(video.id);
+                            }}
+                            color={likedVideos.has(video.id) ? "error" : "default"}
+                          >
+                            {likedVideos.has(video.id) ? <LikeIcon /> : <LikeBorderIcon />}
+                          </IconButton>
+                          <IconButton
+                            size="small"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDislike(video.id);
+                            }}
+                            color={dislikedVideos.has(video.id) ? "primary" : "default"}
+                          >
+                            <DislikeIcon />
+                          </IconButton>
+                          <IconButton size="small">
+                            <ShareIcon />
+                          </IconButton>
+                        </Box>
+                      </Box>
+
+                      {/* Tags */}
+                      <Box sx={{ mt: 1, display: "flex", gap: 0.5, flexWrap: "wrap" }}>
+                        {video.tags.slice(0, 2).map((tag) => (
+                          <Chip
+                            key={tag}
+                            label={`#${tag}`}
+                            size="small"
+                            variant="outlined"
+                            sx={{ fontSize: "0.7rem", height: 20 }}
+                          />
+                        ))}
+                      </Box>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              </Grid>
+            ))}
+          </Grid>
+        </AnimatePresence>
+
+        {/* Upload FAB */}
+        <Tooltip title="Upload Video (+5 Credits)">
+          <Fab
+            color="primary"
+            size="large"
+            sx={{
+              position: "fixed",
+              bottom: 24,
+              right: 24,
+              background: "linear-gradient(45deg, #FF6B6B, #FF8E53)",
+              "&:hover": {
+                transform: "scale(1.1)",
+                background: "linear-gradient(45deg, #FF5252, #FF7043)"
+              }
+            }}
+            onClick={() => {/* Navigate to upload */}}
+          >
+            <UploadIcon />
+          </Fab>
+        </Tooltip>
       </Container>
+
+      {/* Video Player Dialog */}
+      <Dialog
+        open={Boolean(selectedVideo)}
+        onClose={() => setSelectedVideo(null)}
+        maxWidth="lg"
+        fullWidth
+        PaperProps={{
+          sx: {
+            bgcolor: "black",
+            minHeight: "70vh"
+          }
+        }}
+      >
+        {selectedVideo && (
+          <>
+            <DialogTitle sx={{ color: "white", display: "flex", justifyContent: "space-between" }}>
+              <Typography variant="h6">{selectedVideo.title}</Typography>
+              <IconButton onClick={() => setSelectedVideo(null)} sx={{ color: "white" }}>
+                <CloseIcon />
+              </IconButton>
+            </DialogTitle>
+            <DialogContent sx={{ p: 0 }}>
+              <Box
+                sx={{
+                  width: "100%",
+                  height: "400px",
+                  bgcolor: "black",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  position: "relative"
+                }}
+              >
+                <Typography variant="h4" color="white">
+                  🎬 Video Player
+                </Typography>
+                <Typography variant="body2" color="white" sx={{ position: "absolute", bottom: 16 }}>
+                  Duration: {formatDuration(selectedVideo.duration)}
+                </Typography>
+              </Box>
+            </DialogContent>
+          </>
+        )}
+      </Dialog>
+
+      <style>{`
+        @keyframes float {
+          0%, 100% { transform: translateY(0px) rotate(0deg); }
+          33% { transform: translateY(-10px) rotate(1deg); }
+          66% { transform: translateY(5px) rotate(-1deg); }
+        }
+      `}</style>
     </Box>
   );
 }
