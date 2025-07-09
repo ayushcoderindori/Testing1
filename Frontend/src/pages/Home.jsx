@@ -47,7 +47,8 @@ const mockVideos = [
   {
     id: 1,
     title: "Epic Coding Session: Building React in 60 Seconds! 🔥",
-    thumbnail: "https://picsum.photos/400/225?random=1",
+    thumbnail: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/BigBuckBunny.jpg",
+    videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
     duration: 85,
     views: 12500,
     likes: 890,
@@ -66,7 +67,8 @@ const mockVideos = [
   {
     id: 2,
     title: "Mind-Blowing Magic Trick That Will Amaze You! ✨",
-    thumbnail: "https://picsum.photos/400/225?random=2",
+    thumbnail: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/ElephantsDream.jpg",
+    videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
     duration: 73,
     views: 8900,
     likes: 1200,
@@ -85,7 +87,8 @@ const mockVideos = [
   {
     id: 3,
     title: "PREMIUM: Advanced AI Concepts Explained (3 Minutes) 🤖",
-    thumbnail: "https://picsum.photos/400/225?random=3",
+    thumbnail: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/ForBiggerBlazes.jpg",
+    videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
     duration: 165,
     views: 25600,
     likes: 2100,
@@ -104,7 +107,8 @@ const mockVideos = [
   {
     id: 4,
     title: "VIRAL Dance Challenge Everyone's Doing! 💃",
-    thumbnail: "https://picsum.photos/400/225?random=4",
+    thumbnail: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/ForBiggerEscapes.jpg",
+    videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4",
     duration: 45,
     views: 45600,
     likes: 3200,
@@ -118,6 +122,46 @@ const mockVideos = [
     },
     category: "Dance",
     tags: ["dance", "viral", "trending"],
+    isPremium: false
+  },
+  {
+    id: 5,
+    title: "Learn JavaScript in 90 Seconds! ⚡",
+    thumbnail: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/Sintel.jpg",
+    videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4",
+    duration: 89,
+    views: 18700,
+    likes: 1560,
+    dislikes: 23,
+    uploadedAt: "6 hours ago",
+    creator: {
+      username: "js_master_dev",
+      avatar: "https://picsum.photos/40/40?random=105",
+      isVerified: true,
+      subscribers: 67800
+    },
+    category: "Tech",
+    tags: ["javascript", "programming", "beginner"],
+    isPremium: false
+  },
+  {
+    id: 6,
+    title: "Incredible Nature Documentary - Wildlife Footage 🦁",
+    thumbnail: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/TearsOfSteel.jpg",
+    videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4",
+    duration: 78,
+    views: 34200,
+    likes: 2890,
+    dislikes: 18,
+    uploadedAt: "1 day ago",
+    creator: {
+      username: "nature_explorer",
+      avatar: "https://picsum.photos/40/40?random=106",
+      isVerified: true,
+      subscribers: 156000
+    },
+    category: "Education",
+    tags: ["nature", "animals", "documentary"],
     isPremium: false
   }
 ];
@@ -576,18 +620,60 @@ export default function Home() {
                   width: "100%",
                   height: "400px",
                   bgcolor: "black",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
                   position: "relative"
                 }}
               >
-                <Typography variant="h4" color="white">
-                  🎬 Video Player
-                </Typography>
-                <Typography variant="body2" color="white" sx={{ position: "absolute", bottom: 16 }}>
-                  Duration: {formatDuration(selectedVideo.duration)}
-                </Typography>
+                <video
+                  width="100%"
+                  height="100%"
+                  controls
+                  autoPlay
+                  style={{ backgroundColor: "black" }}
+                >
+                  <source src={selectedVideo.videoUrl} type="video/mp4" />
+                  Your browser does not support the video tag.
+                </video>
+                
+                {/* Video Info Overlay */}
+                <Box
+                  sx={{
+                    position: "absolute",
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    bgcolor: "rgba(0,0,0,0.8)",
+                    color: "white",
+                    p: 2,
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center"
+                  }}
+                >
+                  <Box sx={{ display: "flex", alignItems: "center" }}>
+                    <Avatar src={selectedVideo.creator.avatar} sx={{ width: 32, height: 32, mr: 1 }} />
+                    <Box>
+                      <Typography variant="body2" fontWeight="bold">
+                        {selectedVideo.creator.username}
+                        {selectedVideo.creator.isVerified && " ✓"}
+                      </Typography>
+                      <Typography variant="caption" color="rgba(255,255,255,0.7)">
+                        {formatNumber(selectedVideo.views)} views • {selectedVideo.uploadedAt}
+                      </Typography>
+                    </Box>
+                  </Box>
+                  
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                    <IconButton size="small" sx={{ color: "white" }}>
+                      <LikeIcon />
+                    </IconButton>
+                    <Typography variant="caption">
+                      {formatNumber(selectedVideo.likes)}
+                    </Typography>
+                    <IconButton size="small" sx={{ color: "white" }}>
+                      <ShareIcon />
+                    </IconButton>
+                  </Box>
+                </Box>
               </Box>
             </DialogContent>
           </>
