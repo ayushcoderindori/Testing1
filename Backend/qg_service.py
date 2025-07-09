@@ -12,6 +12,11 @@ MODEL_ID = "valhalla/t5-small-qg-prepend"
 tokenizer = T5Tokenizer.from_pretrained(MODEL_ID)
 model     = T5ForConditionalGeneration.from_pretrained(MODEL_ID)
 
+@app.get("/")
+def read_root():
+    return {"message": "Hello World"}
+
+
 @app.post("/generate-questions")
 async def generate_questions(req: QGRequest):
     text = req.summary.strip()
