@@ -8,7 +8,7 @@ import {
   Stack,
   Divider,
 } from "@mui/material";
-import Grid from '@mui/material/Unstable_Grid2';
+import Grid2 from '@mui/material/Grid2';
 import {
   Twitter as TwitterIcon,
   Facebook as FacebookIcon,
@@ -30,8 +30,8 @@ export default function Footer() {
       }}
     >
       <Container maxWidth="lg">
-        <Grid container spacing={4}>
-          <Grid xs={12} md={4}>
+        <Grid2 container spacing={4}>
+          <Grid2 xs={12} md={4}>
             <Typography variant="h5" gutterBottom fontWeight="bold">
               ⚡ BarterSkills
             </Typography>
@@ -76,9 +76,9 @@ export default function Footer() {
                 <GitHubIcon />
               </IconButton>
             </Stack>
-          </Grid>
+          </Grid2>
 
-          <Grid xs={12} sm={6} md={2}>
+          <Grid2 xs={12} sm={6} md={2}>
             <Typography variant="h6" gutterBottom>
               Platform
             </Typography>
@@ -96,9 +96,9 @@ export default function Footer() {
                 Success Stories
               </Link>
             </Stack>
-          </Grid>
+          </Grid2>
 
-          <Grid xs={12} sm={6} md={2}>
+          <Grid2 xs={12} sm={6} md={2}>
             <Typography variant="h6" gutterBottom>
               Community
             </Typography>
@@ -116,9 +116,9 @@ export default function Footer() {
                 Newsletter
               </Link>
             </Stack>
-          </Grid>
+          </Grid2>
 
-          <Grid xs={12} sm={6} md={2}>
+          <Grid2 xs={12} sm={6} md={2}>
             <Typography variant="h6" gutterBottom>
               Support
             </Typography>
@@ -136,9 +136,9 @@ export default function Footer() {
                 Guidelines
               </Link>
             </Stack>
-          </Grid>
+          </Grid2>
 
-          <Grid xs={12} sm={6} md={2}>
+          <Grid2 xs={12} sm={6} md={2}>
             <Typography variant="h6" gutterBottom>
               Legal
             </Typography>
@@ -156,8 +156,8 @@ export default function Footer() {
                 DMCA
               </Link>
             </Stack>
-          </Grid>
-        </Grid>
+          </Grid2>
+        </Grid2>
 
         <Divider sx={{ my: 4, borderColor: "rgba(255,255,255,0.2)" }} />
 

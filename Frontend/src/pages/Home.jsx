@@ -21,7 +21,7 @@ import {
   Tooltip,
   LinearProgress,
 } from "@mui/material";
-import Grid from '@mui/material/Unstable_Grid2';
+import Grid2 from '@mui/material/Grid2';
 import {
   PlayArrow as PlayIcon,
   Favorite as LikeIcon,
@@ -331,14 +331,14 @@ export default function Home() {
             </Box>
 
             {/* Quick Stats */}
-            <Grid container spacing={2}>
+            <Grid2 container spacing={2}>
               {[
                 { label: "Skills Shared", value: "89", icon: "�" },
                 { label: "Active Learners", value: "64", icon: "👥" },
                 { label: "Credits Earned", value: "1.2K", icon: "💰" },
                 { label: "Premium Users", value: "18", icon: "⭐" }
               ].map((stat, index) => (
-                <Grid xs={6} md={3} key={stat.label}>
+                <Grid2 xs={6} md={3} key={stat.label}>
                   <motion.div
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
@@ -354,9 +354,9 @@ export default function Home() {
                       </Typography>
                     </Box>
                   </motion.div>
-                </Grid>
+                </Grid2>
               ))}
-            </Grid>
+            </Grid2>
           </motion.div>
         </Container>
       </Box>
@@ -392,9 +392,9 @@ export default function Home() {
 
         {/* Skills Grid */}
         <AnimatePresence>
-          <Grid container spacing={3}>
+          <Grid2 container spacing={3}>
             {skills.map((skill, index) => (
-              <Grid xs={12} sm={6} md={4} lg={3} key={skill.id}>
+              <Grid2 xs={12} sm={6} md={4} lg={3} key={skill.id}>
                 <motion.div
                   layout
                   initial={{ opacity: 0, scale: 0.9 }}
@@ -579,9 +579,9 @@ export default function Home() {
                     </CardContent>
                   </Card>
                 </motion.div>
-              </Grid>
+              </Grid2>
             ))}
-          </Grid>
+          </Grid2>
         </AnimatePresence>
 
         {/* Upload FAB */}
