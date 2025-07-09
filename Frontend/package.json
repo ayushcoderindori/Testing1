@@ -1,8 +1,9 @@
 {
-  "name": "barterskillsfrontend",
+  "name": "videovault-frontend",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
+  "description": "VideoVault - Revolutionary Video Sharing Platform with AI Assistant",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
