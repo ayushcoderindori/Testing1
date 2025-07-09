@@ -199,13 +199,13 @@ export default function Home() {
     },
   });
 
-  const handleVideoPlay = (video) => {
+  const handleVideoPlay = (skill) => {
     if (!user) {
       // Redirect to login
       return;
     }
     
-    if (video.isPremium && !user.isPremium) {
+    if (skill.isPremium && !user.isPremium) {
       // Show premium upgrade dialog
       return;
     }
@@ -215,8 +215,8 @@ export default function Home() {
       return;
     }
     
-    setSelectedVideo(video);
-    setPlayingVideo(video.id);
+    setSelectedVideo(skill);
+    setPlayingVideo(skill.id);
   };
 
   const handleLike = (videoId) => {
@@ -423,13 +423,13 @@ export default function Home() {
                       <CardMedia
                         component="img"
                         height="180"
-                        image={video.thumbnail}
-                        alt={video.title}
+                        image={skill.thumbnail}
+                        alt={skill.title}
                       />
                       
                       {/* Duration Badge */}
                       <Chip
-                        label={formatDuration(video.duration)}
+                        label={formatDuration(skill.duration)}
                         size="small"
                         sx={{
                           position: "absolute",
@@ -442,7 +442,7 @@ export default function Home() {
                       />
 
                       {/* Premium Badge */}
-                      {video.isPremium && (
+                      {skill.isPremium && (
                         <Chip
                           label="PREMIUM"
                           size="small"
@@ -490,15 +490,15 @@ export default function Home() {
                     <CardContent sx={{ p: 2 }}>
                       {/* Creator Info */}
                       <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
-                        <Avatar src={video.creator.avatar} sx={{ width: 32, height: 32, mr: 1 }} />
+                        <Avatar src={skill.creator.avatar} sx={{ width: 32, height: 32, mr: 1 }} />
                         <Box sx={{ flexGrow: 1, minWidth: 0 }}>
                           <Typography variant="caption" color="text.secondary" noWrap>
-                            {video.creator.username}
-                            {video.creator.isVerified && " ✓"}
+                            {skill.creator.username}
+                            {skill.creator.isVerified && " ✓"}
                           </Typography>
                         </Box>
                         <Typography variant="caption" color="text.secondary">
-                          {video.uploadedAt}
+                          {skill.uploadedAt}
                         </Typography>
                       </Box>
 
@@ -516,7 +516,7 @@ export default function Home() {
                           lineHeight: 1.3
                         }}
                       >
-                        {video.title}
+                        {skill.title}
                       </Typography>
 
                       {/* Stats */}
@@ -525,13 +525,13 @@ export default function Home() {
                           <Box sx={{ display: "flex", alignItems: "center" }}>
                             <ViewIcon sx={{ fontSize: 14, color: "text.secondary", mr: 0.5 }} />
                             <Typography variant="caption" color="text.secondary">
-                              {formatNumber(video.views)}
+                              {formatNumber(skill.views)}
                             </Typography>
                           </Box>
                           <Box sx={{ display: "flex", alignItems: "center" }}>
                             <LikeIcon sx={{ fontSize: 14, color: "success.main", mr: 0.5 }} />
                             <Typography variant="caption" color="text.secondary">
-                              {formatNumber(video.likes)}
+                              {formatNumber(skill.likes)}
                             </Typography>
                           </Box>
                         </Box>
@@ -542,19 +542,19 @@ export default function Home() {
                             size="small"
                             onClick={(e) => {
                               e.stopPropagation();
-                              handleLike(video.id);
+                              handleLike(skill.id);
                             }}
-                            color={likedVideos.has(video.id) ? "error" : "default"}
+                            color={likedVideos.has(skill.id) ? "error" : "default"}
                           >
-                            {likedVideos.has(video.id) ? <LikeIcon /> : <LikeBorderIcon />}
+                            {likedVideos.has(skill.id) ? <LikeIcon /> : <LikeBorderIcon />}
                           </IconButton>
                           <IconButton
                             size="small"
                             onClick={(e) => {
                               e.stopPropagation();
-                              handleDislike(video.id);
+                              handleDislike(skill.id);
                             }}
-                            color={dislikedVideos.has(video.id) ? "primary" : "default"}
+                            color={dislikedVideos.has(skill.id) ? "primary" : "default"}
                           >
                             <DislikeIcon />
                           </IconButton>
@@ -566,7 +566,7 @@ export default function Home() {
 
                       {/* Tags */}
                       <Box sx={{ mt: 1, display: "flex", gap: 0.5, flexWrap: "wrap" }}>
-                        {video.tags.slice(0, 2).map((tag) => (
+                        {skill.tags.slice(0, 2).map((tag) => (
                           <Chip
                             key={tag}
                             label={`#${tag}`}
