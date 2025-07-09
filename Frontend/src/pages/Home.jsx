@@ -29,7 +29,7 @@ import {
   ThumbDown as DislikeIcon,
   Comment as CommentIcon,
   Share as ShareIcon,
-  Upload as UploadIcon,
+  CloudUpload as UploadIcon,
   TrendingUp as TrendingIcon,
   Whatshot as FireIcon,
   AccessTime as TimeIcon,

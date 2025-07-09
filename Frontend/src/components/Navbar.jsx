@@ -23,7 +23,7 @@ import {
   Stack,
 } from "@mui/material";
 import {
-  Upload as UploadIcon,
+  CloudUpload as UploadIcon,
   Search as SearchIcon,
   Notifications as NotificationsIcon,
   MonetizationOn as CreditIcon,
