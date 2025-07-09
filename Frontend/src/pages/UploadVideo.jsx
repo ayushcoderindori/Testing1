@@ -38,7 +38,7 @@ import {
 } from "@mui/icons-material";
 import { motion, AnimatePresence } from "framer-motion";
 import useAuth from "../auth/useAuth.js";
-import Grid from '@mui/material/Grid2';
+import Grid from '@mui/material/Unstable_Grid2';
 
 const categories = [
   "Tech", "Entertainment", "Education", "Gaming", "Art", "Music", 
