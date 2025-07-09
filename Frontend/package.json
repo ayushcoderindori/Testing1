@@ -1,8 +1,9 @@
 {
-  "name": "barterskillsfrontend",
+  "name": "videovault-frontend",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
+  "description": "VideoVault - Revolutionary Video Sharing Platform with AI Assistant",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
@@ -12,6 +13,7 @@
   "dependencies": {
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
+    "@mui/icons-material": "^7.2.0",
     "@mui/material": "^7.2.0",
     "@tanstack/react-query": "^5.81.5",
     "axios": "^1.10.0",
