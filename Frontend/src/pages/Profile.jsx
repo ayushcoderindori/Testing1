@@ -18,7 +18,7 @@ import {
   Badge,
   LinearProgress,
 } from "@mui/material";
-import Grid from '@mui/material/Unstable_Grid2';
+import Grid2 from '@mui/material/Grid2';
 import {
   School as SchoolIcon,
   Work as WorkIcon,
@@ -184,9 +184,9 @@ export default function Profile() {
       </Box>
 
       <Container maxWidth="lg" sx={{ mt: 10, pb: 4 }}>
-        <Grid container spacing={4}>
+        <Grid2 container spacing={4}>
           {/* Left Column */}
-          <Grid xs={12} md={4}>
+          <Grid2 xs={12} md={4}>
             {/* Bio */}
             <Card sx={{ mb: 3 }}>
               <CardContent>
@@ -240,10 +240,10 @@ export default function Profile() {
                 </Stack>
               </CardContent>
             </Card>
-          </Grid>
+          </Grid2>
 
           {/* Right Column */}
-          <Grid xs={12} md={8}>
+          <Grid2 xs={12} md={8}>
             <Paper sx={{ width: "100%" }}>
               <Tabs value={activeTab} onChange={handleTabChange} sx={{ px: 2 }}>
                 <Tab label="Skills Offering" />
@@ -254,9 +254,9 @@ export default function Profile() {
               <Box sx={{ p: 3 }}>
                 {/* Skills Offering Tab */}
                 {activeTab === 0 && (
-                  <Grid container spacing={3}>
+                  <Grid2 container spacing={3}>
                     {user.skillsOffering.map((skill) => (
-                      <Grid key={skill.id} xs={12}>
+                      <Grid2 key={skill.id} xs={12}>
                         <motion.div whileHover={{ scale: 1.02 }}>
                           <Card variant="outlined">
                             <CardContent>
@@ -298,9 +298,9 @@ export default function Profile() {
                             </CardContent>
                           </Card>
                         </motion.div>
-                      </Grid>
+                      </Grid2>
                     ))}
-                  </Grid>
+                  </Grid2>
                 )}
 
                 {/* Currently Learning Tab */}
@@ -362,8 +362,8 @@ export default function Profile() {
                 )}
               </Box>
             </Paper>
-          </Grid>
-        </Grid>
+          </Grid2>
+        </Grid2>
       </Container>
     </Box>
   );
