@@ -1,5 +1,6 @@
 import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
+import { Box, CircularProgress, Typography } from "@mui/material";
 
 import Navbar from "../components/Navbar.jsx";
 import Footer from "../components/Footer.jsx";
@@ -13,8 +14,32 @@ import VideoPlayer from "../pages/VideoPlayer.jsx";
 import Profile from "../pages/Profile.jsx";
 
 import ProtectedRoute from "../auth/ProtectedRoute.jsx";
+import useAuth from "../auth/useAuth.js";
 
 export default function Router() {
+  const { loading } = useAuth();
+
+  // Show loading screen while authentication is being checked
+  if (loading) {
+    return (
+      <Box 
+        sx={{ 
+          display: 'flex', 
+          flexDirection: 'column',
+          alignItems: 'center', 
+          justifyContent: 'center', 
+          minHeight: '100vh',
+          gap: 2
+        }}
+      >
+        <CircularProgress size={60} />
+        <Typography variant="h6" color="text.secondary">
+          Loading BarterSkills...
+        </Typography>
+      </Box>
+    );
+  }
+
   return (
     <>
       <Navbar />

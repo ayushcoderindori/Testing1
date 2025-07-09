@@ -34,11 +34,15 @@ import {
   Settings as SettingsIcon,
   Logout as LogoutIcon,
   ChatBubble as ChatIcon,
+  LightMode as LightModeIcon,
+  DarkMode as DarkModeIcon,
+  SwapHoriz as SkillsIcon,
 } from "@mui/icons-material";
 import { AuthContext } from "../auth/AuthContext.jsx";
 import { useNavigate, Link } from "react-router-dom";
 import { styled } from "@mui/material/styles";
 import { motion } from "framer-motion";
+import { useTheme } from "../contexts/ThemeContext.jsx";
 
 const Search = styled('div')(({ theme }) => ({
   position: 'relative',
@@ -84,6 +88,7 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
 
 export default function Navbar() {
   const { user, logout } = useContext(AuthContext);
+  const { mode, toggleMode } = useTheme();
   const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = useState(null);
   const [notificationAnchor, setNotificationAnchor] = useState(null);
@@ -155,7 +160,7 @@ export default function Navbar() {
                 backgroundClip: "text"
               }}
             >
-              🎬 VideoVault
+              🚀 BarterSkills
             </Typography>
           </motion.div>
         </Box>
@@ -170,16 +175,16 @@ export default function Navbar() {
               startIcon={<TrendingIcon />}
               sx={{ borderRadius: 2 }}
             >
-              Trending
+              Trending Skills
             </Button>
             <Button 
               color="inherit" 
               component={Link} 
               to="/my-videos"
-              startIcon={<VideoIcon />}
+              startIcon={<SkillsIcon />}
               sx={{ borderRadius: 2 }}
             >
-              My Videos
+              My Skills
             </Button>
           </Box>
         )}
@@ -191,7 +196,7 @@ export default function Navbar() {
               <SearchIcon />
             </SearchIconWrapper>
             <StyledInputBase
-              placeholder="Search videos..."
+              placeholder="Search skills..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyPress={handleSearch}
@@ -203,8 +208,22 @@ export default function Navbar() {
 
         {user ? (
           <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+            {/* Theme Toggle */}
+            <Tooltip title={`Switch to ${mode === 'light' ? 'dark' : 'light'} mode`}>
+              <IconButton 
+                color="inherit" 
+                onClick={toggleMode}
+                sx={{ 
+                  bgcolor: "rgba(255,255,255,0.1)",
+                  "&:hover": { bgcolor: "rgba(255,255,255,0.2)" }
+                }}
+              >
+                {mode === 'light' ? <DarkModeIcon /> : <LightModeIcon />}
+              </IconButton>
+            </Tooltip>
+
             {/* Upload Button */}
-            <Tooltip title="Upload Video (+5 Credits)">
+            <Tooltip title="Share Skill (+5 Credits)">
               <Button
                 color="inherit"
                 component={Link}
@@ -220,7 +239,7 @@ export default function Navbar() {
                   }
                 }}
               >
-                Upload
+                Share Skill
               </Button>
             </Tooltip>
 
@@ -452,9 +471,9 @@ export default function Navbar() {
                   transform: "translateY(-1px)"
                 }
               }}
-            >
-              Join VideoVault
-            </Button>
+                          >
+                Join BarterSkills
+              </Button>
           </Box>
         )}
       </Toolbar>

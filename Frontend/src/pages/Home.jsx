@@ -3,7 +3,6 @@ import {
   Box,
   Container,
   Typography,
-  Grid,
   Card,
   CardContent,
   CardMedia,
@@ -22,6 +21,7 @@ import {
   Tooltip,
   LinearProgress,
 } from "@mui/material";
+import Grid from '@mui/material/Grid2';
 import {
   PlayArrow as PlayIcon,
   Favorite as LikeIcon,
@@ -43,130 +43,143 @@ import { motion, AnimatePresence } from "framer-motion";
 import axios from "../api/axios.js";
 import useAuth from "../auth/useAuth.js";
 
-const mockVideos = [
+// Reduced mock data for testing (under 100 items as requested)
+const mockSkills = [
   {
     id: 1,
-    title: "Epic Coding Session: Building React in 60 Seconds! 🔥",
-    thumbnail: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/BigBuckBunny.jpg",
+    title: "Master React Hooks: Complete Guide �",
+    thumbnail: "https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=400",
     videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
     duration: 85,
-    views: 12500,
-    likes: 890,
-    dislikes: 12,
+    views: 245,
+    likes: 42,
+    dislikes: 2,
     uploadedAt: "2 hours ago",
     creator: {
-      username: "codemaster_alex",
-      avatar: "https://picsum.photos/40/40?random=101",
+      username: "react_master",
+      avatar: "https://picsum.photos/40/40?random=1",
       isVerified: true,
-      subscribers: 45200
+      subscribers: 85
     },
-    category: "Tech",
-    tags: ["coding", "react", "tutorial"],
-    isPremium: false
+    category: "Programming",
+    tags: ["react", "hooks", "javascript"],
+    isPremium: false,
+    skillLevel: "Intermediate",
+    creditsEarned: 15
   },
   {
     id: 2,
-    title: "Mind-Blowing Magic Trick That Will Amaze You! ✨",
-    thumbnail: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/ElephantsDream.jpg",
+    title: "Guitar Basics: Learn Your First Song 🎸",
+    thumbnail: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400",
     videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
     duration: 73,
-    views: 8900,
-    likes: 1200,
-    dislikes: 5,
-    uploadedAt: "5 hours ago",
+    views: 189,
+    likes: 38,
+    dislikes: 1,
+    uploadedAt: "4 hours ago",
     creator: {
-      username: "magic_sarah",
-      avatar: "https://picsum.photos/40/40?random=102",
+      username: "guitar_guru",
+      avatar: "https://picsum.photos/40/40?random=2",
       isVerified: false,
-      subscribers: 15600
+      subscribers: 67
     },
-    category: "Entertainment",
-    tags: ["magic", "amazing", "viral"],
-    isPremium: false
+    category: "Music",
+    tags: ["guitar", "beginner", "chords"],
+    isPremium: false,
+    skillLevel: "Beginner",
+    creditsEarned: 12
   },
   {
     id: 3,
-    title: "PREMIUM: Advanced AI Concepts Explained (3 Minutes) 🤖",
-    thumbnail: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/ForBiggerBlazes.jpg",
+    title: "Digital Marketing Strategy in 90 Seconds 📈",
+    thumbnail: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=400",
     videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
-    duration: 165,
-    views: 25600,
-    likes: 2100,
-    dislikes: 45,
+    duration: 90,
+    views: 156,
+    likes: 29,
+    dislikes: 3,
     uploadedAt: "1 day ago",
     creator: {
-      username: "ai_guru_mike",
-      avatar: "https://picsum.photos/40/40?random=103",
+      username: "marketing_pro",
+      avatar: "https://picsum.photos/40/40?random=3",
       isVerified: true,
-      subscribers: 125000
+      subscribers: 92
     },
-    category: "Education",
-    tags: ["AI", "machine learning", "premium"],
-    isPremium: true
+    category: "Business",
+    tags: ["marketing", "strategy", "digital"],
+    isPremium: true,
+    skillLevel: "Advanced",
+    creditsEarned: 25
   },
   {
     id: 4,
-    title: "VIRAL Dance Challenge Everyone's Doing! 💃",
-    thumbnail: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/ForBiggerEscapes.jpg",
+    title: "Photoshop Quick Tips & Tricks ✨",
+    thumbnail: "https://images.unsplash.com/photo-1572044162444-ad60f128bdea?w=400",
     videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4",
-    duration: 45,
-    views: 45600,
-    likes: 3200,
-    dislikes: 89,
+    duration: 65,
+    views: 198,
+    likes: 45,
+    dislikes: 2,
     uploadedAt: "3 hours ago",
     creator: {
-      username: "dance_queen_emma",
-      avatar: "https://picsum.photos/40/40?random=104",
+      username: "design_wizard",
+      avatar: "https://picsum.photos/40/40?random=4",
       isVerified: true,
-      subscribers: 89500
+      subscribers: 73
     },
-    category: "Dance",
-    tags: ["dance", "viral", "trending"],
-    isPremium: false
+    category: "Design",
+    tags: ["photoshop", "design", "tips"],
+    isPremium: false,
+    skillLevel: "Intermediate",
+    creditsEarned: 18
   },
   {
     id: 5,
-    title: "Learn JavaScript in 90 Seconds! ⚡",
-    thumbnail: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/Sintel.jpg",
+    title: "Public Speaking Confidence Boost 🎤",
+    thumbnail: "https://images.unsplash.com/photo-1475721027785-f74eccf877e2?w=400",
     videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4",
-    duration: 89,
-    views: 18700,
-    likes: 1560,
-    dislikes: 23,
+    duration: 88,
+    views: 134,
+    likes: 31,
+    dislikes: 1,
     uploadedAt: "6 hours ago",
     creator: {
-      username: "js_master_dev",
-      avatar: "https://picsum.photos/40/40?random=105",
+      username: "speaker_coach",
+      avatar: "https://picsum.photos/40/40?random=5",
       isVerified: true,
-      subscribers: 67800
+      subscribers: 58
     },
-    category: "Tech",
-    tags: ["javascript", "programming", "beginner"],
-    isPremium: false
+    category: "Communication",
+    tags: ["speaking", "confidence", "presentation"],
+    isPremium: false,
+    skillLevel: "Beginner",
+    creditsEarned: 20
   },
   {
     id: 6,
-    title: "Incredible Nature Documentary - Wildlife Footage 🦁",
-    thumbnail: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/TearsOfSteel.jpg",
+    title: "Python Data Analysis Fundamentals 🐍",
+    thumbnail: "https://images.unsplash.com/photo-1526379095098-d400fd0bf935?w=400",
     videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4",
     duration: 78,
-    views: 34200,
-    likes: 2890,
-    dislikes: 18,
+    views: 167,
+    likes: 35,
+    dislikes: 4,
     uploadedAt: "1 day ago",
     creator: {
-      username: "nature_explorer",
-      avatar: "https://picsum.photos/40/40?random=106",
+      username: "data_scientist",
+      avatar: "https://picsum.photos/40/40?random=6",
       isVerified: true,
-      subscribers: 156000
+      subscribers: 94
     },
-    category: "Education",
-    tags: ["nature", "animals", "documentary"],
-    isPremium: false
+    category: "Data Science",
+    tags: ["python", "data", "analysis"],
+    isPremium: false,
+    skillLevel: "Intermediate",
+    creditsEarned: 22
   }
 ];
 
-const categories = ["All", "Tech", "Entertainment", "Education", "Dance", "Gaming", "Art", "Music"];
+const categories = ["All", "Programming", "Business", "Design", "Music", "Communication", "Data Science", "Creative"];
 
 export default function Home() {
   const { user } = useAuth();
@@ -176,12 +189,12 @@ export default function Home() {
   const [likedVideos, setLikedVideos] = useState(new Set());
   const [dislikedVideos, setDislikedVideos] = useState(new Set());
 
-  const { data: videos = mockVideos, isPending } = useQuery({
-    queryKey: ["videos", selectedCategory],
+  const { data: skills = mockSkills, isPending } = useQuery({
+    queryKey: ["skills", selectedCategory],
     queryFn: async () => {
       // Simulate API call
-      return mockVideos.filter(video => 
-        selectedCategory === "All" || video.category === selectedCategory
+      return mockSkills.filter(skill => 
+        selectedCategory === "All" || skill.category === selectedCategory
       );
     },
   });
@@ -286,10 +299,10 @@ export default function Home() {
             <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 4 }}>
               <Box>
                 <Typography variant="h2" component="h1" gutterBottom fontWeight="bold">
-                  🎬 Welcome to VideoVault
+                  🚀 Welcome to BarterSkills
                 </Typography>
                 <Typography variant="h5" sx={{ opacity: 0.9 }}>
-                  Where every video is worth watching ✨
+                  Where skills are shared, learned, and mastered ✨
                 </Typography>
               </Box>
               
@@ -320,12 +333,12 @@ export default function Home() {
             {/* Quick Stats */}
             <Grid container spacing={2}>
               {[
-                { label: "Videos Today", value: "1.2K", icon: "🎥" },
-                { label: "Active Creators", value: "850", icon: "👥" },
-                { label: "Credits Earned", value: "45K", icon: "💰" },
-                { label: "Premium Users", value: "320", icon: "⭐" }
+                { label: "Skills Shared", value: "89", icon: "�" },
+                { label: "Active Learners", value: "64", icon: "👥" },
+                { label: "Credits Earned", value: "1.2K", icon: "💰" },
+                { label: "Premium Users", value: "18", icon: "⭐" }
               ].map((stat, index) => (
-                <Grid size={{ xs: 6, md: 3 }} key={stat.label}>
+                <Grid xs={6} md={3} key={stat.label}>
                   <motion.div
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
@@ -377,11 +390,11 @@ export default function Home() {
           </Tabs>
         </Box>
 
-        {/* Video Grid */}
+        {/* Skills Grid */}
         <AnimatePresence>
           <Grid container spacing={3}>
-            {videos.map((video, index) => (
-              <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={video.id}>
+            {skills.map((skill, index) => (
+              <Grid xs={12} sm={6} md={4} lg={3} key={skill.id}>
                 <motion.div
                   layout
                   initial={{ opacity: 0, scale: 0.9 }}
@@ -398,12 +411,12 @@ export default function Home() {
                       overflow: "hidden",
                       "&:hover": {
                         boxShadow: "0 12px 24px rgba(0,0,0,0.15)",
-                        "& .video-overlay": {
+                        "& .skill-overlay": {
                           opacity: 1
                         }
                       }
                     }}
-                    onClick={() => handleVideoPlay(video)}
+                    onClick={() => handleVideoPlay(skill)}
                   >
                     {/* Thumbnail with Play Overlay */}
                     <Box sx={{ position: "relative" }}>

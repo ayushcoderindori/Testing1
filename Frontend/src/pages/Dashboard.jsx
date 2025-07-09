@@ -24,6 +24,7 @@ import {
   Menu,
   MenuItem,
 } from "@mui/material";
+import Grid from '@mui/material/Grid2';
 import {
   TrendingUp as TrendingIcon,
   VideoLibrary as VideoIcon,
@@ -198,7 +199,7 @@ export default function Dashboard() {
             change: "↑0.2 this month"
           }
         ].map((stat, index) => (
-          <Grid item xs={12} sm={6} md={4} lg={2} key={stat.label}>
+          <Grid xs={12} sm={6} md={4} lg={2} key={stat.label}>
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -243,7 +244,7 @@ export default function Dashboard() {
 
       <Grid container spacing={4}>
         {/* Main Content */}
-        <Grid item xs={12} lg={8}>
+        <Grid xs={12} lg={8}>
           <Paper sx={{ mb: 3 }}>
             <Tabs value={activeTab} onChange={handleTabChange}>
               <Tab label="My Videos" />
@@ -270,7 +271,7 @@ export default function Dashboard() {
 
                   <Grid container spacing={3}>
                     {mockDashboardData.recentVideos.map((video) => (
-                      <Grid item xs={12} md={6} key={video.id}>
+                      <Grid xs={12} md={6} key={video.id}>
                         <motion.div
                           whileHover={{ scale: 1.02 }}
                           transition={{ duration: 0.2 }}
@@ -361,7 +362,7 @@ export default function Dashboard() {
                   <Typography variant="h6">Video Analytics</Typography>
                   
                   <Grid container spacing={3}>
-                    <Grid item xs={12} md={8}>
+                    <Grid xs={12} md={8}>
                       <Card>
                         <CardContent>
                           <Typography variant="h6" gutterBottom>
@@ -392,7 +393,7 @@ export default function Dashboard() {
                       </Card>
                     </Grid>
                     
-                    <Grid item xs={12} md={4}>
+                    <Grid xs={12} md={4}>
                       <Card>
                         <CardContent>
                           <Typography variant="h6" gutterBottom>
@@ -439,7 +440,7 @@ export default function Dashboard() {
         </Grid>
 
         {/* Sidebar */}
-        <Grid item xs={12} lg={4}>
+        <Grid xs={12} lg={4}>
           <Stack spacing={3}>
             {/* Quick Actions */}
             <Card>
