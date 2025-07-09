@@ -38,7 +38,7 @@ import {
   Delete as DeleteIcon,
   Share as ShareIcon,
   Analytics as AnalyticsIcon,
-  Upload as UploadIcon,
+  CloudUpload as UploadIcon,
   CalendarToday as CalendarIcon,
 } from "@mui/icons-material";
 import { motion, AnimatePresence } from "framer-motion";
