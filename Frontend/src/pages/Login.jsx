@@ -14,7 +14,6 @@ import { Google as GoogleIcon } from "@mui/icons-material";
 import { useMutation } from "@tanstack/react-query";
 import api from "../api/axios.js"; 
 import { AuthContext } from "../auth/AuthContext.jsx";
-import { initiateGoogleAuth } from "../api/auth.js";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -37,7 +36,11 @@ export default function Login() {
     },
     onError: (err) => {
       console.error("Login error:", err);
-      setError(err.response?.data?.message || "Login failed. Please check your credentials.");
+      if (err.code === 'ECONNREFUSED' || err.message.includes('Network Error')) {
+        setError("Cannot connect to server. Please ensure the backend is running.");
+      } else {
+        setError(err.response?.data?.message || "Login failed. Please check your credentials.");
+      }
     },
   });
 
@@ -58,7 +61,7 @@ export default function Login() {
 
   const handleGoogleLogin = () => {
     try {
-      initiateGoogleAuth();
+      window.location.href = `${import.meta.env.VITE_API_URL || "http://localhost:8000/api/v1"}/users/auth/google`;
     } catch (err) {
       setError("Failed to initiate Google login. Please try again.");
     }
@@ -93,7 +96,6 @@ export default function Login() {
             margin="normal"
             required
             autoComplete="email"
-            error={error && !form.email}
           />
           <TextField
             fullWidth
@@ -105,7 +107,6 @@ export default function Login() {
             margin="normal"
             required
             autoComplete="current-password"
-            error={error && !form.password}
           />
           <Button
             type="submit"
