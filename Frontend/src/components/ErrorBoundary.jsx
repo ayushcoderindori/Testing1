@@ -1,6 +1,5 @@
 import React from 'react';
 import {
-  Box,
   Container,
   Typography,
   Button,
@@ -19,7 +18,7 @@ import { useNavigate } from 'react-router-dom';
 class ErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { hasError: false, error: null, errorInfo: null };
+    this.state = { hasError: false, error: null };
   }
 
   static getDerivedStateFromError(error) {
@@ -27,12 +26,7 @@ class ErrorBoundary extends React.Component {
   }
 
   componentDidCatch(error, errorInfo) {
-    this.setState({
-      error,
-      errorInfo
-    });
-    
-    // Log error to console for debugging
+    this.setState({ error });
     console.error('Error Boundary caught an error:', error, errorInfo);
   }
 
@@ -40,7 +34,6 @@ class ErrorBoundary extends React.Component {
     if (this.state.hasError) {
       return <ErrorFallback error={this.state.error} />;
     }
-
     return this.props.children;
   }
 }
@@ -67,19 +60,8 @@ function ErrorFallback({ error }) {
           </Typography>
           
           <Typography variant="body1" color="text.secondary" paragraph>
-            We're sorry, but something unexpected happened. Please try refreshing the page or go back to the home page.
+            We're sorry, but something unexpected happened. Please try refreshing the page.
           </Typography>
-
-          {error && (
-            <Alert severity="error" sx={{ my: 3, textAlign: 'left' }}>
-              <Typography variant="subtitle2" gutterBottom>
-                Error Details:
-              </Typography>
-              <Typography variant="body2" sx={{ fontFamily: 'monospace' }}>
-                {error.toString()}
-              </Typography>
-            </Alert>
-          )}
 
           <Stack direction="row" spacing={2} justifyContent="center" sx={{ mt: 3 }}>
             <Button
@@ -97,10 +79,6 @@ function ErrorFallback({ error }) {
               Go Home
             </Button>
           </Stack>
-
-          <Typography variant="caption" color="text.secondary" sx={{ mt: 4, display: 'block' }}>
-            If this problem persists, please contact our support team.
-          </Typography>
         </CardContent>
       </Card>
     </Container>
