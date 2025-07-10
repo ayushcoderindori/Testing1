@@ -171,4 +171,4 @@ const createCustomTheme = (mode) => createTheme({
   }
 });
 
-export default { createCustomTheme, lightPalette, darkPalette };
+export { createCustomTheme, lightPalette, darkPalette };
