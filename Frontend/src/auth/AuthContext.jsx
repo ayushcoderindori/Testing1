@@ -8,6 +8,7 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [connectionError, setConnectionError] = useState(false);
 
   // Check for authentication on app load
   useEffect(() => {
@@ -16,6 +17,7 @@ export function AuthProvider({ children }) {
 
   const checkAuth = async () => {
     try {
+      setConnectionError(false);
       // Check if we have a refresh token in cookies or access token in localStorage
       const accessToken = localStorage.getItem('accessToken');
       
@@ -27,10 +29,21 @@ export function AuthProvider({ children }) {
 
       // Try to get current user with existing token
       const { data } = await api.get("/users/current-user");
-      setUser(data.data);
-      setIsAuthenticated(true);
+      if (data.success && data.data) {
+        setUser(data.data);
+        setIsAuthenticated(true);
+      } else {
+        throw new Error("Invalid user data received");
+      }
     } catch (err) {
       console.log("Authentication check failed:", err.message);
+      
+      // Check if it's a connection error
+      if (err.code === 'ECONNREFUSED' || err.code === 'ERR_NETWORK' || err.message.includes('Network Error')) {
+        setConnectionError(true);
+        console.error("❌ Backend server is not running. Please start the backend server.");
+      }
+      
       // Clear any invalid tokens
       localStorage.removeItem('accessToken');
       setUser(null);
@@ -42,15 +55,30 @@ export function AuthProvider({ children }) {
 
   const refreshToken = async () => {
     try {
+      setConnectionError(false);
       const { data } = await api.post("/users/refresh-token");
-      localStorage.setItem('accessToken', data.data.accessToken);
       
-      // Get user data after successful refresh
-      const userData = await api.get("/users/current-user");
-      setUser(userData.data.data);
-      setIsAuthenticated(true);
+      if (data.success && data.data.accessToken) {
+        localStorage.setItem('accessToken', data.data.accessToken);
+        
+        // Get user data after successful refresh
+        const userData = await api.get("/users/current-user");
+        if (userData.data.success && userData.data.data) {
+          setUser(userData.data.data);
+          setIsAuthenticated(true);
+        }
+      } else {
+        throw new Error("Invalid refresh token response");
+      }
     } catch (err) {
       console.log("Token refresh failed:", err.message);
+      
+      // Check if it's a connection error
+      if (err.code === 'ECONNREFUSED' || err.code === 'ERR_NETWORK' || err.message.includes('Network Error')) {
+        setConnectionError(true);
+        console.error("❌ Backend server is not running. Please start the backend server.");
+      }
+      
       setUser(null);
       setIsAuthenticated(false);
     } finally {
@@ -60,37 +88,73 @@ export function AuthProvider({ children }) {
 
   const login = async (credentials) => {
     try {
+      setConnectionError(false);
       const { data } = await api.post("/users/login", credentials);
       
-      // Store access token
-      if (data.data.accessToken) {
-        localStorage.setItem('accessToken', data.data.accessToken);
+      if (data.success && data.data) {
+        // Store access token
+        if (data.data.accessToken) {
+          localStorage.setItem('accessToken', data.data.accessToken);
+        }
+        
+        // Set user data
+        setUser(data.data.user);
+        setIsAuthenticated(true);
+        
+        return { success: true };
+      } else {
+        return { 
+          success: false, 
+          error: data.message || "Login failed" 
+        };
       }
-      
-      // Fetch user data
-      const userData = await api.get("/users/current-user");
-      setUser(userData.data.data);
-      setIsAuthenticated(true);
-      
-      return { success: true };
     } catch (err) {
       console.error("Login failed:", err.message);
+      
+      // Check if it's a connection error
+      if (err.code === 'ECONNREFUSED' || err.code === 'ERR_NETWORK' || err.message.includes('Network Error')) {
+        setConnectionError(true);
+        return { 
+          success: false, 
+          error: "Cannot connect to server. Please ensure the backend is running." 
+        };
+      }
+      
       return { 
         success: false, 
-        error: err.response?.data?.message || "Login failed" 
+        error: err.response?.data?.message || "Login failed. Please try again." 
       };
     }
   };
 
   const register = async (userData) => {
     try {
+      setConnectionError(false);
       const { data } = await api.post("/users/register", userData);
-      return { success: true, data };
+      
+      if (data.success && data.data) {
+        return { success: true, data: data.data };
+      } else {
+        return { 
+          success: false, 
+          error: data.message || "Registration failed" 
+        };
+      }
     } catch (err) {
       console.error("Registration failed:", err.message);
+      
+      // Check if it's a connection error
+      if (err.code === 'ECONNREFUSED' || err.code === 'ERR_NETWORK' || err.message.includes('Network Error')) {
+        setConnectionError(true);
+        return { 
+          success: false, 
+          error: "Cannot connect to server. Please ensure the backend is running." 
+        };
+      }
+      
       return { 
         success: false, 
-        error: err.response?.data?.message || "Registration failed" 
+        error: err.response?.data?.message || "Registration failed. Please try again." 
       };
     }
   };
@@ -112,11 +176,14 @@ export function AuthProvider({ children }) {
     user,
     loading,
     isAuthenticated,
+    connectionError,
     login,
     register,
     logout,
     refreshToken,
-    checkAuth
+    checkAuth,
+    setUser,
+    setIsAuthenticated
   };
 
   return (

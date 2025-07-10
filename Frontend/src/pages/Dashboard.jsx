@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Container,
   Typography,
@@ -22,6 +22,9 @@ import {
   CardMedia,
   Menu,
   MenuItem,
+  Alert,
+  CircularProgress,
+  Skeleton,
 } from "@mui/material";
 import Grid from '@mui/material/Grid';
 import {
@@ -40,78 +43,59 @@ import {
   Analytics as AnalyticsIcon,
   CloudUpload as UploadIcon,
   CalendarToday as CalendarIcon,
+  Refresh as RefreshIcon,
 } from "@mui/icons-material";
 import { motion, AnimatePresence } from "framer-motion";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import useAuth from "../auth/useAuth.js";
 import { useNavigate } from "react-router-dom";
-
-const mockDashboardData = {
-  stats: {
-    totalVideos: 12,
-    totalViews: 25430,
-    totalLikes: 1280,
-    totalComments: 340,
-    creditsEarned: 60,
-    subscribersGained: 145,
-    watchTimeHours: 142,
-    avgRating: 4.7
-  },
-  recentVideos: [
-    {
-      id: 1,
-      title: "Epic Coding Session: Building React in 60 Seconds! 🔥",
-      thumbnail: "https://picsum.photos/300/170?random=1",
-      views: 3200,
-      likes: 150,
-      comments: 23,
-      duration: 85,
-      uploadedAt: "2 days ago",
-      status: "published",
-      earnings: 15
-    },
-    {
-      id: 2,
-      title: "Mind-Blowing Magic Trick Tutorial ✨",
-      thumbnail: "https://picsum.photos/300/170?random=2",
-      views: 1800,
-      likes: 89,
-      comments: 12,
-      duration: 73,
-      uploadedAt: "5 days ago",
-      status: "published",
-      earnings: 8
-    },
-    {
-      id: 3,
-      title: "AI Explained in Under 2 Minutes 🤖",
-      thumbnail: "https://picsum.photos/300/170?random=3",
-      views: 5600,
-      likes: 420,
-      comments: 78,
-      duration: 165,
-      uploadedAt: "1 week ago",
-      status: "published",
-      earnings: 25
-    }
-  ],
-  analytics: {
-    viewsThisWeek: [120, 150, 89, 200, 310, 280, 195],
-    topCountries: ["United States", "India", "Germany", "Brazil", "Canada"],
-    deviceTypes: { mobile: 65, desktop: 30, tablet: 5 }
-  },
-  notifications: [
-    { id: 1, type: "milestone", message: "Congratulations! Your video reached 1K views", time: "2 hours ago" },
-    { id: 2, type: "comment", message: "John commented on 'Epic Coding Session'", time: "4 hours ago" },
-    { id: 3, type: "like", message: "Your video got 50 new likes today!", time: "6 hours ago" }
-  ]
-};
+import { getDashboardStats, getChannelAnalytics, fetchVideos, deleteVideo } from "../api/videos.js";
 
 export default function Dashboard() {
-  const { user } = useAuth();
+  const { user, connectionError } = useAuth();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState(0);
   const [menuAnchor, setMenuAnchor] = useState(null);
   const [selectedVideo, setSelectedVideo] = useState(null);
+
+  // Fetch dashboard stats
+  const { data: dashboardStats, isLoading: statsLoading, error: statsError, refetch: refetchStats } = useQuery({
+    queryKey: ['dashboardStats'],
+    queryFn: getDashboardStats,
+    enabled: !!user && !connectionError,
+    retry: 2,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+
+  // Fetch user videos
+  const { data: videosData, isLoading: videosLoading, error: videosError, refetch: refetchVideos } = useQuery({
+    queryKey: ['userVideos'],
+    queryFn: () => fetchVideos({ owner: user?._id }),
+    enabled: !!user && !connectionError,
+    retry: 2,
+  });
+
+  // Fetch analytics
+  const { data: analyticsData, isLoading: analyticsLoading, error: analyticsError } = useQuery({
+    queryKey: ['channelAnalytics'],
+    queryFn: getChannelAnalytics,
+    enabled: !!user && !connectionError && activeTab === 1,
+    retry: 2,
+  });
+
+  // Delete video mutation
+  const deleteVideoMutation = useMutation({
+    mutationFn: deleteVideo,
+    onSuccess: () => {
+      queryClient.invalidateQueries(['userVideos']);
+      queryClient.invalidateQueries(['dashboardStats']);
+      handleMenuClose();
+    },
+    onError: (error) => {
+      console.error('Delete video error:', error);
+    }
+  });
 
   const handleTabChange = (event, newValue) => {
     setActiveTab(newValue);
@@ -128,28 +112,85 @@ export default function Dashboard() {
     setSelectedVideo(null);
   };
 
+  const handleDeleteVideo = () => {
+    if (selectedVideo) {
+      deleteVideoMutation.mutate(selectedVideo._id);
+    }
+  };
+
+  const handleRefresh = () => {
+    refetchStats();
+    refetchVideos();
+    queryClient.invalidateQueries(['channelAnalytics']);
+  };
+
   const formatNumber = (num) => {
+    if (!num) return '0';
     if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
     if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
     return num.toString();
   };
 
   const formatDuration = (seconds) => {
+    if (!seconds) return '0:00';
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
+  // Default stats for when API is not available
+  const defaultStats = {
+    totalVideos: 0,
+    totalViews: 0,
+    totalLikes: 0,
+    totalComments: 0,
+    creditsEarned: 0,
+    subscribersGained: 0,
+    watchTimeHours: 0,
+    avgRating: 0
+  };
+
+  const stats = dashboardStats?.data || defaultStats;
+  const videos = videosData?.data || [];
+
+  // Show connection error
+  if (connectionError) {
+    return (
+      <Container maxWidth="xl" sx={{ py: 4 }}>
+        <Alert 
+          severity="error" 
+          action={
+            <Button color="inherit" size="small" onClick={handleRefresh} startIcon={<RefreshIcon />}>
+              Retry
+            </Button>
+          }
+        >
+          Cannot connect to server. Please ensure the backend is running and try again.
+        </Alert>
+      </Container>
+    );
+  }
+
   return (
     <Container maxWidth="xl" sx={{ py: 4 }}>
       {/* Header */}
-      <Box sx={{ mb: 4 }}>
-        <Typography variant="h3" gutterBottom fontWeight="bold">
-          Welcome back, {user?.fullName || "Creator"}! 🎬
-        </Typography>
-        <Typography variant="h6" color="text.secondary">
-          Track your video performance and grow your audience
-        </Typography>
+      <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Box>
+          <Typography variant="h3" gutterBottom fontWeight="bold">
+            Welcome back, {user?.fullName || "Creator"}! 🎬
+          </Typography>
+          <Typography variant="h6" color="text.secondary">
+            Track your video performance and grow your audience
+          </Typography>
+        </Box>
+        <Button 
+          variant="outlined" 
+          startIcon={<RefreshIcon />} 
+          onClick={handleRefresh}
+          disabled={statsLoading || videosLoading}
+        >
+          Refresh
+        </Button>
       </Box>
 
       {/* Stats Overview */}
@@ -157,42 +198,42 @@ export default function Dashboard() {
         {[
           { 
             label: "Total Videos", 
-            value: mockDashboardData.stats.totalVideos, 
+            value: stats.totalVideos, 
             icon: <VideoIcon />,
             color: "primary.main",
             change: "+2 this week"
           },
           { 
             label: "Total Views", 
-            value: formatNumber(mockDashboardData.stats.totalViews), 
+            value: formatNumber(stats.totalViews), 
             icon: <ViewIcon />,
             color: "success.main",
             change: "+1.2K this week"
           },
           { 
             label: "Total Likes", 
-            value: formatNumber(mockDashboardData.stats.totalLikes), 
+            value: formatNumber(stats.totalLikes), 
             icon: <LikeIcon />,
             color: "error.main",
             change: "+89 this week"
           },
           { 
             label: "Credits Earned", 
-            value: mockDashboardData.stats.creditsEarned, 
+            value: stats.creditsEarned, 
             icon: <CreditIcon />,
             color: "warning.main",
             change: "+15 this week"
           },
           { 
             label: "Watch Time", 
-            value: `${mockDashboardData.stats.watchTimeHours}h`, 
+            value: `${stats.watchTimeHours}h`, 
             icon: <TrendingIcon />,
             color: "info.main",
             change: "+23h this week"
           },
           { 
             label: "Avg Rating", 
-            value: mockDashboardData.stats.avgRating, 
+            value: stats.avgRating || "N/A", 
             icon: <StarIcon />,
             color: "secondary.main",
             change: "↑0.2 this month"
@@ -224,9 +265,13 @@ export default function Dashboard() {
                     >
                       {stat.icon}
                     </Box>
-                    <Typography variant="h4" fontWeight="bold">
-                      {stat.value}
-                    </Typography>
+                    {statsLoading ? (
+                      <Skeleton variant="text" width={60} height={40} />
+                    ) : (
+                      <Typography variant="h4" fontWeight="bold">
+                        {stat.value}
+                      </Typography>
+                    )}
                   </Box>
                   <Typography variant="subtitle2" gutterBottom>
                     {stat.label}
@@ -240,6 +285,13 @@ export default function Dashboard() {
           </Grid>
         ))}
       </Grid>
+
+      {/* Error handling */}
+      {(statsError || videosError) && (
+        <Alert severity="warning" sx={{ mb: 3 }}>
+          Some data couldn't be loaded. {statsError?.message || videosError?.message}
+        </Alert>
+      )}
 
       <Grid container spacing={4}>
         {/* Main Content */}
@@ -257,7 +309,7 @@ export default function Dashboard() {
                 <Stack spacing={3}>
                   <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <Typography variant="h6">
-                      Your Videos ({mockDashboardData.recentVideos.length})
+                      Your Videos ({videos.length})
                     </Typography>
                     <Button 
                       variant="contained" 
@@ -268,90 +320,124 @@ export default function Dashboard() {
                     </Button>
                   </Box>
 
-                  <Grid container spacing={3}>
-                    {mockDashboardData.recentVideos.map((video) => (
-                      <Grid item xs={12} md={6} key={video.id}>
-                        <motion.div
-                          whileHover={{ scale: 1.02 }}
-                          transition={{ duration: 0.2 }}
-                        >
-                          <Card 
-                            sx={{ 
-                              cursor: "pointer",
-                              transition: "all 0.3s ease",
-                              "&:hover": { boxShadow: 4 }
-                            }}
-                            onClick={() => navigate(`/video/${video.id}`)}
-                          >
-                            <Box sx={{ position: "relative" }}>
-                              <CardMedia
-                                component="img"
-                                height="160"
-                                image={video.thumbnail}
-                                alt={video.title}
-                              />
-                              <Chip
-                                label={formatDuration(video.duration)}
-                                size="small"
-                                sx={{
-                                  position: "absolute",
-                                  bottom: 8,
-                                  right: 8,
-                                  bgcolor: "rgba(0,0,0,0.8)",
-                                  color: "white"
-                                }}
-                              />
-                              <IconButton
-                                onClick={(e) => handleVideoMenu(e, video)}
-                                sx={{
-                                  position: "absolute",
-                                  top: 8,
-                                  right: 8,
-                                  bgcolor: "rgba(0,0,0,0.5)",
-                                  color: "white",
-                                  "&:hover": { bgcolor: "rgba(0,0,0,0.8)" }
-                                }}
-                              >
-                                <MoreIcon />
-                              </IconButton>
-                            </Box>
+                  {videosLoading ? (
+                    <Grid container spacing={3}>
+                      {[1, 2, 3, 4].map((item) => (
+                        <Grid item xs={12} md={6} key={item}>
+                          <Card>
+                            <Skeleton variant="rectangular" height={160} />
                             <CardContent>
-                              <Typography variant="subtitle1" fontWeight="bold" noWrap>
-                                {video.title}
-                              </Typography>
-                              
-                              <Box sx={{ display: "flex", alignItems: "center", gap: 2, mt: 1 }}>
-                                <Box sx={{ display: "flex", alignItems: "center" }}>
-                                  <ViewIcon sx={{ fontSize: 16, mr: 0.5, color: "text.secondary" }} />
-                                  <Typography variant="caption">{formatNumber(video.views)}</Typography>
-                                </Box>
-                                <Box sx={{ display: "flex", alignItems: "center" }}>
-                                  <LikeIcon sx={{ fontSize: 16, mr: 0.5, color: "success.main" }} />
-                                  <Typography variant="caption">{video.likes}</Typography>
-                                </Box>
-                                <Box sx={{ display: "flex", alignItems: "center" }}>
-                                  <CommentIcon sx={{ fontSize: 16, mr: 0.5, color: "info.main" }} />
-                                  <Typography variant="caption">{video.comments}</Typography>
-                                </Box>
-                              </Box>
-
-                              <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mt: 2 }}>
-                                <Typography variant="caption" color="text.secondary">
-                                  {video.uploadedAt}
-                                </Typography>
-                                <Chip 
-                                  label={`+${video.earnings} credits`}
-                                  size="small"
-                                  color="success"
-                                  variant="outlined"
-                                />
-                              </Box>
+                              <Skeleton variant="text" height={30} />
+                              <Skeleton variant="text" height={20} />
+                              <Skeleton variant="text" height={20} />
                             </CardContent>
                           </Card>
-                        </motion.div>
-                      </Grid>
-                    ))}
-                  </Grid>
+                        </Grid>
+                      ))}
+                    </Grid>
+                  ) : videos.length === 0 ? (
+                    <Box sx={{ textAlign: "center", py: 4 }}>
+                      <VideoIcon sx={{ fontSize: 80, color: "text.secondary", mb: 2 }} />
+                      <Typography variant="h6" color="text.secondary" gutterBottom>
+                        No videos uploaded yet
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                        Start creating content to see your videos here
+                      </Typography>
+                      <Button 
+                        variant="contained" 
+                        startIcon={<UploadIcon />}
+                        onClick={() => navigate("/upload")}
+                      >
+                        Upload Your First Video
+                      </Button>
+                    </Box>
+                  ) : (
+                    <Grid container spacing={3}>
+                      {videos.map((video) => (
+                        <Grid item xs={12} md={6} key={video._id}>
+                          <motion.div
+                            whileHover={{ scale: 1.02 }}
+                            transition={{ duration: 0.2 }}
+                          >
+                            <Card 
+                              sx={{ 
+                                cursor: "pointer",
+                                transition: "all 0.3s ease",
+                                "&:hover": { boxShadow: 4 }
+                              }}
+                              onClick={() => navigate(`/video/${video._id}`)}
+                            >
+                              <Box sx={{ position: "relative" }}>
+                                <CardMedia
+                                  component="img"
+                                  height="160"
+                                  image={video.thumbnail || "https://picsum.photos/300/170?random=" + video._id}
+                                  alt={video.title}
+                                />
+                                <Chip
+                                  label={formatDuration(video.duration)}
+                                  size="small"
+                                  sx={{
+                                    position: "absolute",
+                                    bottom: 8,
+                                    right: 8,
+                                    bgcolor: "rgba(0,0,0,0.8)",
+                                    color: "white"
+                                  }}
+                                />
+                                <IconButton
+                                  onClick={(e) => handleVideoMenu(e, video)}
+                                  sx={{
+                                    position: "absolute",
+                                    top: 8,
+                                    right: 8,
+                                    bgcolor: "rgba(0,0,0,0.5)",
+                                    color: "white",
+                                    "&:hover": { bgcolor: "rgba(0,0,0,0.8)" }
+                                  }}
+                                >
+                                  <MoreIcon />
+                                </IconButton>
+                              </Box>
+                              <CardContent>
+                                <Typography variant="subtitle1" fontWeight="bold" noWrap>
+                                  {video.title}
+                                </Typography>
+                                
+                                <Box sx={{ display: "flex", alignItems: "center", gap: 2, mt: 1 }}>
+                                  <Box sx={{ display: "flex", alignItems: "center" }}>
+                                    <ViewIcon sx={{ fontSize: 16, mr: 0.5, color: "text.secondary" }} />
+                                    <Typography variant="caption">{formatNumber(video.views || 0)}</Typography>
+                                  </Box>
+                                  <Box sx={{ display: "flex", alignItems: "center" }}>
+                                    <LikeIcon sx={{ fontSize: 16, mr: 0.5, color: "success.main" }} />
+                                    <Typography variant="caption">{video.likesCount || 0}</Typography>
+                                  </Box>
+                                  <Box sx={{ display: "flex", alignItems: "center" }}>
+                                    <CommentIcon sx={{ fontSize: 16, mr: 0.5, color: "info.main" }} />
+                                    <Typography variant="caption">{video.commentsCount || 0}</Typography>
+                                  </Box>
+                                </Box>
+
+                                <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mt: 2 }}>
+                                  <Typography variant="caption" color="text.secondary">
+                                    {new Date(video.createdAt).toLocaleDateString()}
+                                  </Typography>
+                                  <Chip 
+                                    label={video.isPublished ? "Published" : "Draft"}
+                                    size="small"
+                                    color={video.isPublished ? "success" : "default"}
+                                    variant="outlined"
+                                  />
+                                </Box>
+                              </CardContent>
+                            </Card>
+                          </motion.div>
+                        </Grid>
+                      ))}
+                    </Grid>
+                  )}
                 </Stack>
               )}
 
@@ -360,62 +446,51 @@ export default function Dashboard() {
                 <Stack spacing={3}>
                   <Typography variant="h6">Video Analytics</Typography>
                   
-                  <Grid container spacing={3}>
-                    <Grid item xs={12} md={8}>
-                      <Card>
-                        <CardContent>
-                          <Typography variant="h6" gutterBottom>
-                            Views This Week
-                          </Typography>
-                          <Box sx={{ height: 200, display: "flex", alignItems: "end", gap: 1 }}>
-                            {mockDashboardData.analytics.viewsThisWeek.map((views, index) => (
-                              <Box
-                                key={index}
-                                sx={{
-                                  flex: 1,
-                                  height: `${(views / 310) * 160}px`,
-                                  bgcolor: "primary.main",
-                                  borderRadius: 1,
-                                  display: "flex",
-                                  alignItems: "end",
-                                  justifyContent: "center",
-                                  pb: 1
-                                }}
-                              >
-                                <Typography variant="caption" color="white">
-                                  {views}
-                                </Typography>
-                              </Box>
-                            ))}
-                          </Box>
-                        </CardContent>
-                      </Card>
+                  {analyticsLoading ? (
+                    <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+                      <CircularProgress />
+                    </Box>
+                  ) : analyticsError ? (
+                    <Alert severity="info">
+                      Analytics data is currently unavailable. Please check back later.
+                    </Alert>
+                  ) : (
+                    <Grid container spacing={3}>
+                      <Grid item xs={12} md={8}>
+                        <Card>
+                          <CardContent>
+                            <Typography variant="h6" gutterBottom>
+                              Views This Week
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary">
+                              Analytics visualization coming soon
+                            </Typography>
+                          </CardContent>
+                        </Card>
+                      </Grid>
+                      
+                      <Grid item xs={12} md={4}>
+                        <Card>
+                          <CardContent>
+                            <Typography variant="h6" gutterBottom>
+                              Performance Summary
+                            </Typography>
+                            <Stack spacing={1}>
+                              <Typography variant="body2">
+                                Total Views: {formatNumber(stats.totalViews)}
+                              </Typography>
+                              <Typography variant="body2">
+                                Total Likes: {formatNumber(stats.totalLikes)}
+                              </Typography>
+                              <Typography variant="body2">
+                                Watch Time: {stats.watchTimeHours}h
+                              </Typography>
+                            </Stack>
+                          </CardContent>
+                        </Card>
+                      </Grid>
                     </Grid>
-                    
-                    <Grid item xs={12} md={4}>
-                      <Card>
-                        <CardContent>
-                          <Typography variant="h6" gutterBottom>
-                            Top Countries
-                          </Typography>
-                          <Stack spacing={1}>
-                            {mockDashboardData.analytics.topCountries.map((country, index) => (
-                              <Box key={country} sx={{ display: "flex", alignItems: "center" }}>
-                                <Typography variant="body2" sx={{ flex: 1 }}>
-                                  {index + 1}. {country}
-                                </Typography>
-                                <LinearProgress
-                                  variant="determinate"
-                                  value={(5 - index) * 20}
-                                  sx={{ width: 60, mr: 1 }}
-                                />
-                              </Box>
-                            ))}
-                          </Stack>
-                        </CardContent>
-                      </Card>
-                    </Grid>
-                  </Grid>
+                  )}
                 </Stack>
               )}
 
@@ -466,30 +541,6 @@ export default function Dashboard() {
               </CardContent>
             </Card>
 
-            {/* Recent Notifications */}
-            <Card>
-              <CardContent>
-                <Typography variant="h6" gutterBottom>
-                  Recent Activity
-                </Typography>
-                <List dense>
-                  {mockDashboardData.notifications.map((notification) => (
-                    <ListItem key={notification.id} sx={{ px: 0 }}>
-                      <ListItemText
-                        primary={notification.message}
-                        secondary={notification.time}
-                        primaryTypographyProps={{ variant: "body2" }}
-                        secondaryTypographyProps={{ variant: "caption" }}
-                      />
-                    </ListItem>
-                  ))}
-                </List>
-                <Button variant="outlined" size="small" fullWidth sx={{ mt: 2 }}>
-                  View All Activity
-                </Button>
-              </CardContent>
-            </Card>
-
             {/* Upload Tips */}
             <Card sx={{ bgcolor: "info.light" }}>
               <CardContent>
@@ -530,9 +581,13 @@ export default function Dashboard() {
           <ShareIcon sx={{ mr: 2 }} />
           Share Video
         </MenuItem>
-        <MenuItem onClick={handleMenuClose} sx={{ color: "error.main" }}>
+        <MenuItem 
+          onClick={handleDeleteVideo} 
+          sx={{ color: "error.main" }}
+          disabled={deleteVideoMutation.isPending}
+        >
           <DeleteIcon sx={{ mr: 2 }} />
-          Delete Video
+          {deleteVideoMutation.isPending ? "Deleting..." : "Delete Video"}
         </MenuItem>
       </Menu>
     </Container>
