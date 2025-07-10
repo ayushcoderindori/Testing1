@@ -4,6 +4,7 @@ import { Box, CircularProgress, Typography } from "@mui/material";
 
 import Navbar from "../components/Navbar.jsx";
 import Footer from "../components/Footer.jsx";
+import AIChatbot from "../components/AIChatbot.jsx";
 
 import Home from "../pages/Home.jsx";
 import Login from "../pages/Login.jsx";
@@ -12,6 +13,7 @@ import Dashboard from "../pages/Dashboard.jsx";
 import UploadVideo from "../pages/UploadVideo.jsx";
 import VideoPlayer from "../pages/VideoPlayer.jsx";
 import Profile from "../pages/Profile.jsx";
+import OAuthHandler from "../auth/OAuthHandler.jsx";
 
 import ProtectedRoute from "../auth/ProtectedRoute.jsx";
 import useAuth from "../auth/useAuth.js";
@@ -34,7 +36,7 @@ export default function Router() {
       >
         <CircularProgress size={60} />
         <Typography variant="h6" color="text.secondary">
-          Loading BarterSkills...
+          Loading VideoVault...
         </Typography>
       </Box>
     );
@@ -47,6 +49,7 @@ export default function Router() {
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/auth/callback" element={<OAuthHandler />} />
 
         <Route element={<ProtectedRoute />}>
           <Route path="/dashboard" element={<Dashboard />} />
@@ -59,6 +62,7 @@ export default function Router() {
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       <Footer />
+      <AIChatbot />
     </>
   );
 }

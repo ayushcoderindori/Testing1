@@ -27,6 +27,9 @@ import {
   Tooltip,
   Tabs,
   Tab,
+  Alert,
+  CircularProgress,
+  Snackbar,
 } from "@mui/material";
 import {
   PlayArrow as PlayIcon,
@@ -46,115 +49,27 @@ import {
   Visibility as ViewIcon,
   MonetizationOn as CreditIcon,
   Close as CloseIcon,
+  ContentCopy as CopyIcon,
+  Facebook as FacebookIcon,
+  Twitter as TwitterIcon,
+  WhatsApp as WhatsAppIcon,
 } from "@mui/icons-material";
 import { motion, AnimatePresence } from "framer-motion";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import useAuth from "../auth/useAuth.js";
+import { 
+  fetchVideo, 
+  toggleVideoLike, 
+  getVideoComments, 
+  addVideoComment,
+  fetchVideos 
+} from "../api/videos.js";
 import Grid from '@mui/material/Grid';
-
-const mockVideoData = {
-  id: 1,
-  title: "Epic Coding Session: Building React in 60 Seconds! 🔥",
-  description: "In this amazing tutorial, I'll show you how to build a complete React component from scratch in under 60 seconds! Perfect for beginners and intermediate developers looking to level up their React skills. We'll cover hooks, state management, and modern React patterns.",
-  videoUrl: "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4",
-  thumbnail: "https://picsum.photos/1280/720?random=1",
-  duration: 85,
-  views: 12500,
-  likes: 890,
-  dislikes: 12,
-  uploadedAt: "2 hours ago",
-  category: "Tech",
-  tags: ["React", "JavaScript", "Tutorial", "Coding"],
-  
-  creator: {
-    id: 1,
-    username: "codemaster_alex",
-    fullName: "Alex Chen",
-    avatar: "https://picsum.photos/80/80?random=101",
-    isVerified: true,
-    subscribers: 45200,
-    videosCount: 127,
-    bio: "Full-stack developer and coding educator. Helping developers level up their skills one video at a time! 🚀",
-    socialLinks: {
-      twitter: "@codemaster_alex",
-      github: "github.com/alexchen",
-      website: "alexchen.dev"
-    }
-  },
-
-  comments: [
-    {
-      id: 1,
-      user: {
-        username: "john_dev",
-        avatar: "https://picsum.photos/40/40?random=201",
-        isVerified: false
-      },
-      text: "This is absolutely incredible! I learned more in 60 seconds than in hours of other tutorials. Thanks Alex! 🙌",
-      timestamp: "1 hour ago",
-      likes: 23,
-      replies: [
-        {
-          id: 11,
-          user: {
-            username: "codemaster_alex",
-            avatar: "https://picsum.photos/40/40?random=101",
-            isVerified: true
-          },
-          text: "Thanks John! Really glad it helped you out! Keep coding! 💪",
-          timestamp: "45 minutes ago",
-          likes: 8
-        }
-      ]
-    },
-    {
-      id: 2,
-      user: {
-        username: "sarah_codes",
-        avatar: "https://picsum.photos/40/40?random=202",
-        isVerified: true
-      },
-      text: "The way you explained hooks is just perfect! Could you make a longer version covering more advanced patterns?",
-      timestamp: "30 minutes ago",
-      likes: 15,
-      replies: []
-    }
-  ],
-
-  relatedVideos: [
-    {
-      id: 2,
-      title: "Advanced React Patterns You Should Know",
-      thumbnail: "https://picsum.photos/320/180?random=2",
-      creator: "Alex Chen",
-      views: 8900,
-      duration: 125,
-      uploadedAt: "1 day ago"
-    },
-    {
-      id: 3,
-      title: "JavaScript ES6+ Features Explained",
-      thumbnail: "https://picsum.photos/320/180?random=3", 
-      creator: "Alex Chen",
-      views: 15600,
-      duration: 95,
-      uploadedAt: "3 days ago"
-    },
-    {
-      id: 4,
-      title: "Building Your First React App",
-      thumbnail: "https://picsum.photos/320/180?random=4",
-      creator: "Alex Chen", 
-      views: 22300,
-      duration: 180,
-      uploadedAt: "1 week ago"
-    }
-  ]
-};
 
 export default function VideoPlayer() {
   const { id } = useParams();
-  const { user } = useAuth();
-  const [video, setVideo] = useState(mockVideoData);
+  const { user, connectionError } = useAuth();
+  const queryClient = useQueryClient();
   const [isPlaying, setIsPlaying] = useState(false);
   const [hasLiked, setHasLiked] = useState(false);
   const [hasDisliked, setHasDisliked] = useState(false);
@@ -163,51 +78,268 @@ export default function VideoPlayer() {
   const [showShareDialog, setShowShareDialog] = useState(false);
   const [showReportDialog, setShowReportDialog] = useState(false);
   const [activeTab, setActiveTab] = useState(0);
+  const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "info" });
+
+  // Fetch video data
+  const { data: videoData, isLoading: videoLoading, error: videoError } = useQuery({
+    queryKey: ['video', id],
+    queryFn: () => fetchVideo(id),
+    enabled: !!id,
+    retry: 2,
+  });
+
+  // Fetch video comments
+  const { data: commentsData, isLoading: commentsLoading } = useQuery({
+    queryKey: ['videoComments', id],
+    queryFn: () => getVideoComments(id),
+    enabled: !!id,
+    retry: 2,
+  });
+
+  // Fetch related videos
+  const { data: relatedVideosData, isLoading: relatedLoading } = useQuery({
+    queryKey: ['relatedVideos'],
+    queryFn: () => fetchVideos({ limit: 5 }),
+    retry: 2,
+  });
+
+  // Like/Unlike video mutation
+  const likeMutation = useMutation({
+    mutationFn: () => toggleVideoLike(id),
+    onSuccess: (response) => {
+      setHasLiked(!hasLiked);
+      if (hasDisliked) setHasDisliked(false);
+      
+      // Update the video data in cache
+      queryClient.setQueryData(['video', id], (oldData) => {
+        if (oldData && oldData.data) {
+          return {
+            ...oldData,
+            data: {
+              ...oldData.data,
+              likesCount: hasLiked ? oldData.data.likesCount - 1 : oldData.data.likesCount + 1,
+              isLiked: !hasLiked
+            }
+          };
+        }
+        return oldData;
+      });
+
+      setSnackbar({
+        open: true,
+        message: hasLiked ? "Removed from liked videos" : "Added to liked videos",
+        severity: "success"
+      });
+    },
+    onError: (error) => {
+      setSnackbar({
+        open: true,
+        message: "Failed to update like. Please try again.",
+        severity: "error"
+      });
+    }
+  });
+
+  // Add comment mutation
+  const commentMutation = useMutation({
+    mutationFn: (content) => addVideoComment(id, content),
+    onSuccess: () => {
+      setNewComment("");
+      queryClient.invalidateQueries(['videoComments', id]);
+      setSnackbar({
+        open: true,
+        message: "Comment added successfully!",
+        severity: "success"
+      });
+    },
+    onError: (error) => {
+      setSnackbar({
+        open: true,
+        message: "Failed to add comment. Please try again.",
+        severity: "error"
+      });
+    }
+  });
 
   useEffect(() => {
+    // Set initial like status from video data
+    if (videoData?.data?.isLiked !== undefined) {
+      setHasLiked(videoData.data.isLiked);
+    }
+    
     // Deduct 1 credit for watching (if not premium)
-    if (user && !user.isPremium) {
-      // API call to deduct credit
+    if (user && !user.isPremium && videoData?.data) {
       console.log("Deducting 1 credit for watching video");
     }
-  }, [user]);
+  }, [user, videoData]);
 
   const handleLike = () => {
-    setHasLiked(!hasLiked);
-    if (hasDisliked) setHasDisliked(false);
-    // API call to like video
+    if (!user) {
+      setSnackbar({
+        open: true,
+        message: "Please log in to like videos",
+        severity: "warning"
+      });
+      return;
+    }
+    likeMutation.mutate();
   };
 
   const handleDislike = () => {
+    if (!user) {
+      setSnackbar({
+        open: true,
+        message: "Please log in to interact with videos",
+        severity: "warning"
+      });
+      return;
+    }
     setHasDisliked(!hasDisliked);
     if (hasLiked) setHasLiked(false);
-    // API call to dislike video
+    // TODO: Implement dislike API call
   };
 
   const handleSubscribe = () => {
+    if (!user) {
+      setSnackbar({
+        open: true,
+        message: "Please log in to subscribe",
+        severity: "warning"
+      });
+      return;
+    }
     setIsSubscribed(!isSubscribed);
-    // API call to subscribe/unsubscribe
+    // TODO: Implement subscribe API call
   };
 
   const handleAddComment = () => {
+    if (!user) {
+      setSnackbar({
+        open: true,
+        message: "Please log in to comment",
+        severity: "warning"
+      });
+      return;
+    }
+    
     if (newComment.trim()) {
-      // API call to add comment
-      console.log("Adding comment:", newComment);
-      setNewComment("");
+      commentMutation.mutate(newComment.trim());
     }
   };
 
+  const handleShare = (platform) => {
+    const videoUrl = window.location.href;
+    const videoTitle = videoData?.data?.title || "Check out this video";
+    
+    let shareUrl = "";
+    
+    switch (platform) {
+      case 'copy':
+        navigator.clipboard.writeText(videoUrl);
+        setSnackbar({
+          open: true,
+          message: "Link copied to clipboard!",
+          severity: "success"
+        });
+        break;
+      case 'facebook':
+        shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(videoUrl)}`;
+        window.open(shareUrl, '_blank');
+        break;
+      case 'twitter':
+        shareUrl = `https://twitter.com/intent/tweet?url=${encodeURIComponent(videoUrl)}&text=${encodeURIComponent(videoTitle)}`;
+        window.open(shareUrl, '_blank');
+        break;
+      case 'whatsapp':
+        shareUrl = `https://wa.me/?text=${encodeURIComponent(videoTitle + ' ' + videoUrl)}`;
+        window.open(shareUrl, '_blank');
+        break;
+    }
+    
+    setShowShareDialog(false);
+  };
+
   const formatNumber = (num) => {
+    if (!num) return '0';
     if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
     if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
     return num.toString();
   };
 
   const formatDuration = (seconds) => {
+    if (!seconds) return '0:00';
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
+
+  // Show connection error
+  if (connectionError) {
+    return (
+      <Container maxWidth="xl" sx={{ py: 3 }}>
+        <Alert severity="error">
+          Cannot connect to server. Please ensure the backend is running and try again.
+        </Alert>
+      </Container>
+    );
+  }
+
+  // Show loading state
+  if (videoLoading) {
+    return (
+      <Container maxWidth="xl" sx={{ py: 3 }}>
+        <Grid container spacing={3}>
+          <Grid item xs={12} lg={8}>
+            <Card sx={{ mb: 3 }}>
+              <Box sx={{ position: "relative", paddingTop: "56.25%", bgcolor: "grey.300" }}>
+                <CircularProgress 
+                  sx={{ 
+                    position: "absolute", 
+                    top: "50%", 
+                    left: "50%", 
+                    transform: "translate(-50%, -50%)" 
+                  }} 
+                />
+              </Box>
+            </Card>
+            <Card>
+              <CardContent>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <CircularProgress size={20} />
+                  <Typography>Loading video...</Typography>
+                </Box>
+              </CardContent>
+            </Card>
+          </Grid>
+        </Grid>
+      </Container>
+    );
+  }
+
+  // Show error state
+  if (videoError) {
+    return (
+      <Container maxWidth="xl" sx={{ py: 3 }}>
+        <Alert severity="error">
+          {videoError.message || "Failed to load video. Please try again."}
+        </Alert>
+      </Container>
+    );
+  }
+
+  const video = videoData?.data;
+  const comments = commentsData?.data || [];
+  const relatedVideos = relatedVideosData?.data || [];
+
+  if (!video) {
+    return (
+      <Container maxWidth="xl" sx={{ py: 3 }}>
+        <Alert severity="warning">
+          Video not found.
+        </Alert>
+      </Container>
+    );
+  }
 
   return (
     <Container maxWidth="xl" sx={{ py: 3 }}>
@@ -230,55 +362,74 @@ export default function VideoPlayer() {
                 }}
                 onClick={() => setIsPlaying(!isPlaying)}
               >
-                <Box
-                  component="img"
-                  src={video.thumbnail}
-                  sx={{
-                    position: "absolute",
-                    top: 0,
-                    left: 0,
-                    width: "100%",
-                    height: "100%",
-                    objectFit: "cover"
-                  }}
-                />
+                {video.videoFile ? (
+                  <Box
+                    component="video"
+                    src={video.videoFile}
+                    sx={{
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover"
+                    }}
+                    controls
+                    poster={video.thumbnail}
+                  />
+                ) : (
+                  <Box
+                    component="img"
+                    src={video.thumbnail || "https://picsum.photos/1280/720?random=" + video._id}
+                    sx={{
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover"
+                    }}
+                  />
+                )}
                 
-                {/* Play/Pause Overlay */}
-                <Box
-                  sx={{
-                    position: "absolute",
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    bgcolor: isPlaying ? "transparent" : "rgba(0,0,0,0.3)",
-                    transition: "all 0.3s ease"
-                  }}
-                >
-                  {!isPlaying && (
-                    <motion.div
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      whileHover={{ scale: 1.1 }}
-                    >
-                      <IconButton
-                        size="large"
-                        sx={{
-                          bgcolor: "rgba(255,255,255,0.9)",
-                          color: "black",
-                          width: 80,
-                          height: 80,
-                          "&:hover": { bgcolor: "white" }
-                        }}
+                {/* Play/Pause Overlay (only if no video file) */}
+                {!video.videoFile && (
+                  <Box
+                    sx={{
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      bgcolor: isPlaying ? "transparent" : "rgba(0,0,0,0.3)",
+                      transition: "all 0.3s ease"
+                    }}
+                  >
+                    {!isPlaying && (
+                      <motion.div
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        whileHover={{ scale: 1.1 }}
                       >
-                        <PlayIcon sx={{ fontSize: 40 }} />
-                      </IconButton>
-                    </motion.div>
-                  )}
-                </Box>
+                        <IconButton
+                          size="large"
+                          sx={{
+                            bgcolor: "rgba(255,255,255,0.9)",
+                            color: "black",
+                            width: 80,
+                            height: 80,
+                            "&:hover": { bgcolor: "white" }
+                          }}
+                        >
+                          <PlayIcon sx={{ fontSize: 40 }} />
+                        </IconButton>
+                      </motion.div>
+                    )}
+                  </Box>
+                )}
 
                 {/* Duration Badge */}
                 <Chip
@@ -308,11 +459,11 @@ export default function VideoPlayer() {
                     <Box sx={{ display: "flex", alignItems: "center" }}>
                       <ViewIcon sx={{ mr: 0.5, color: "text.secondary" }} />
                       <Typography variant="body2">
-                        {formatNumber(video.views)} views
+                        {formatNumber(video.views || 0)} views
                       </Typography>
                     </Box>
                     <Typography variant="body2" color="text.secondary">
-                      {video.uploadedAt}
+                      {new Date(video.createdAt).toLocaleDateString()}
                     </Typography>
                   </Box>
 
@@ -326,8 +477,9 @@ export default function VideoPlayer() {
                         onClick={handleLike}
                         color={hasLiked ? "error" : "inherit"}
                         variant={hasLiked ? "contained" : "outlined"}
+                        disabled={likeMutation.isPending}
                       >
-                        {formatNumber(video.likes + (hasLiked ? 1 : 0))}
+                        {formatNumber((video.likesCount || 0) + (hasLiked && !video.isLiked ? 1 : 0))}
                       </Button>
                     </Tooltip>
 
@@ -338,7 +490,7 @@ export default function VideoPlayer() {
                         color={hasDisliked ? "primary" : "inherit"}
                         variant={hasDisliked ? "contained" : "outlined"}
                       >
-                        {formatNumber(video.dislikes + (hasDisliked ? 1 : 0))}
+                        {formatNumber(video.dislikesCount || 0)}
                       </Button>
                     </Tooltip>
 
@@ -353,6 +505,13 @@ export default function VideoPlayer() {
                     <Button
                       startIcon={<DownloadIcon />}
                       variant="outlined"
+                      onClick={() => {
+                        setSnackbar({
+                          open: true,
+                          message: "Download feature coming soon!",
+                          severity: "info"
+                        });
+                      }}
                     >
                       Save
                     </Button>
@@ -368,15 +527,15 @@ export default function VideoPlayer() {
                 {/* Creator Info */}
                 <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
                   <Avatar
-                    src={video.creator.avatar}
+                    src={video.owner?.avatar}
                     sx={{ width: 56, height: 56, mr: 2 }}
                   />
                   <Box sx={{ flex: 1 }}>
                     <Box sx={{ display: "flex", alignItems: "center", mb: 0.5 }}>
                       <Typography variant="h6" fontWeight="bold">
-                        {video.creator.fullName}
+                        {video.owner?.fullName || video.owner?.username}
                       </Typography>
-                      {video.creator.isVerified && (
+                      {video.owner?.isVerified && (
                         <Chip
                           label="✓"
                           size="small"
@@ -386,7 +545,7 @@ export default function VideoPlayer() {
                       )}
                     </Box>
                     <Typography variant="body2" color="text.secondary">
-                      {formatNumber(video.creator.subscribers)} subscribers • {video.creator.videosCount} videos
+                      {formatNumber(video.owner?.subscribersCount || 0)} subscribers
                     </Typography>
                   </Box>
                   
@@ -407,17 +566,19 @@ export default function VideoPlayer() {
                 </Typography>
 
                 {/* Tags */}
-                <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
-                  {video.tags.map((tag) => (
-                    <Chip
-                      key={tag}
-                      label={`#${tag}`}
-                      variant="outlined"
-                      size="small"
-                      clickable
-                    />
-                  ))}
-                </Box>
+                {video.tags && video.tags.length > 0 && (
+                  <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
+                    {video.tags.map((tag, index) => (
+                      <Chip
+                        key={index}
+                        label={`#${tag}`}
+                        variant="outlined"
+                        size="small"
+                        clickable
+                      />
+                    ))}
+                  </Box>
+                )}
               </CardContent>
             </Card>
 
@@ -425,7 +586,7 @@ export default function VideoPlayer() {
             <Card>
               <CardContent>
                 <Typography variant="h6" gutterBottom>
-                  Comments ({video.comments.length})
+                  Comments ({comments.length})
                 </Typography>
 
                 {/* Add Comment */}
@@ -456,216 +617,162 @@ export default function VideoPlayer() {
                         variant="contained"
                         size="small"
                         onClick={handleAddComment}
-                        disabled={!newComment.trim()}
+                        disabled={!newComment.trim() || commentMutation.isPending}
                         startIcon={<SendIcon />}
                       >
-                        Comment
+                        {commentMutation.isPending ? "Posting..." : "Comment"}
                       </Button>
                     </Box>
                   </Box>
                 )}
 
                 {/* Comments List */}
-                <Stack spacing={3}>
-                  {video.comments.map((comment) => (
-                    <Box key={comment.id}>
-                      <Box sx={{ display: "flex", gap: 2 }}>
-                        <Avatar src={comment.user.avatar} sx={{ width: 36, height: 36 }} />
-                        <Box sx={{ flex: 1 }}>
-                          <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.5 }}>
-                            <Typography variant="subtitle2" fontWeight="bold">
-                              {comment.user.username}
-                            </Typography>
-                            {comment.user.isVerified && (
-                              <Chip
-                                label="✓"
-                                size="small"
-                                color="primary"
-                                sx={{ minWidth: 20, height: 16 }}
-                              />
-                            )}
-                            <Typography variant="caption" color="text.secondary">
-                              {comment.timestamp}
-                            </Typography>
-                          </Box>
-                          <Typography variant="body2" paragraph>
-                            {comment.text}
-                          </Typography>
-                          <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                            <Button size="small" startIcon={<LikeIcon />}>
-                              {comment.likes}
-                            </Button>
-                            <Button size="small">Reply</Button>
-                          </Box>
-
-                          {/* Replies */}
-                          {comment.replies.length > 0 && (
-                            <Box sx={{ ml: 4, mt: 2 }}>
-                              {comment.replies.map((reply) => (
-                                <Box key={reply.id} sx={{ display: "flex", gap: 2, mb: 2 }}>
-                                  <Avatar src={reply.user.avatar} sx={{ width: 28, height: 28 }} />
-                                  <Box sx={{ flex: 1 }}>
-                                    <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.5 }}>
-                                      <Typography variant="caption" fontWeight="bold">
-                                        {reply.user.username}
-                                      </Typography>
-                                      {reply.user.isVerified && (
-                                        <Chip
-                                          label="✓"
-                                          size="small"
-                                          color="primary"
-                                          sx={{ minWidth: 16, height: 14 }}
-                                        />
-                                      )}
-                                      <Typography variant="caption" color="text.secondary">
-                                        {reply.timestamp}
-                                      </Typography>
-                                    </Box>
-                                    <Typography variant="body2">
-                                      {reply.text}
-                                    </Typography>
-                                  </Box>
-                                </Box>
-                              ))}
+                {commentsLoading ? (
+                  <Box sx={{ display: 'flex', justifyContent: 'center', py: 2 }}>
+                    <CircularProgress size={24} />
+                  </Box>
+                ) : comments.length === 0 ? (
+                  <Box sx={{ textAlign: "center", py: 4 }}>
+                    <CommentIcon sx={{ fontSize: 60, color: "text.secondary", mb: 2 }} />
+                    <Typography variant="body1" color="text.secondary">
+                      No comments yet. Be the first to comment!
+                    </Typography>
+                  </Box>
+                ) : (
+                  <Stack spacing={3}>
+                    {comments.map((comment) => (
+                      <Box key={comment._id}>
+                        <Box sx={{ display: "flex", gap: 2 }}>
+                          <Avatar src={comment.owner?.avatar} sx={{ width: 36, height: 36 }} />
+                          <Box sx={{ flex: 1 }}>
+                            <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.5 }}>
+                              <Typography variant="subtitle2" fontWeight="bold">
+                                {comment.owner?.username}
+                              </Typography>
+                              {comment.owner?.isVerified && (
+                                <Chip
+                                  label="✓"
+                                  size="small"
+                                  color="primary"
+                                  sx={{ minWidth: 20, height: 16 }}
+                                />
+                              )}
+                              <Typography variant="caption" color="text.secondary">
+                                {new Date(comment.createdAt).toLocaleDateString()}
+                              </Typography>
                             </Box>
-                          )}
+                            <Typography variant="body2" paragraph>
+                              {comment.content}
+                            </Typography>
+                            <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                              <Button size="small" startIcon={<LikeIcon />}>
+                                {comment.likesCount || 0}
+                              </Button>
+                              <Button size="small">Reply</Button>
+                            </Box>
+                          </Box>
                         </Box>
                       </Box>
-                    </Box>
-                  ))}
-                </Stack>
+                    ))}
+                  </Stack>
+                )}
               </CardContent>
             </Card>
           </motion.div>
-                  </Grid>
+        </Grid>
 
-          {/* Sidebar */}
-          <Grid item xs={12} lg={4}>
-          <Stack spacing={3}>
-            {/* Creator Profile Card */}
-            <Card>
-              <CardContent>
-                <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-                  <Avatar
-                    src={video.creator.avatar}
-                    sx={{ width: 48, height: 48, mr: 2 }}
-                  />
-                  <Box sx={{ flex: 1 }}>
-                    <Typography variant="h6" fontWeight="bold">
-                      {video.creator.fullName}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      @{video.creator.username}
-                    </Typography>
-                  </Box>
+        {/* Related Videos Sidebar */}
+        <Grid item xs={12} lg={4}>
+          <Card>
+            <CardContent>
+              <Typography variant="h6" gutterBottom>
+                Related Videos
+              </Typography>
+              
+              {relatedLoading ? (
+                <Box sx={{ display: 'flex', justifyContent: 'center', py: 2 }}>
+                  <CircularProgress size={24} />
                 </Box>
-                <Typography variant="body2" color="text.secondary" paragraph>
-                  {video.creator.bio}
+              ) : relatedVideos.length === 0 ? (
+                <Typography variant="body2" color="text.secondary">
+                  No related videos found
                 </Typography>
-                <Button variant="outlined" fullWidth>
-                  View Channel
-                </Button>
-              </CardContent>
-            </Card>
-
-            {/* Related Videos */}
-            <Card>
-              <CardContent>
-                <Typography variant="h6" gutterBottom>
-                  More from {video.creator.fullName}
-                </Typography>
+              ) : (
                 <Stack spacing={2}>
-                  {video.relatedVideos.map((relatedVideo) => (
-                    <motion.div
-                      key={relatedVideo.id}
-                      whileHover={{ scale: 1.02 }}
-                      style={{ cursor: "pointer" }}
+                  {relatedVideos.slice(0, 5).map((relatedVideo) => (
+                    <Card 
+                      key={relatedVideo._id} 
+                      sx={{ cursor: "pointer", "&:hover": { boxShadow: 2 } }}
+                      onClick={() => window.location.href = `/video/${relatedVideo._id}`}
                     >
-                      <Box sx={{ display: "flex", gap: 2 }}>
-                        <Box sx={{ position: "relative" }}>
-                          <CardMedia
-                            component="img"
-                            image={relatedVideo.thumbnail}
-                            sx={{ width: 120, height: 68, borderRadius: 1 }}
-                          />
-                          <Chip
-                            label={formatDuration(relatedVideo.duration)}
-                            size="small"
-                            sx={{
-                              position: "absolute",
-                              bottom: 4,
-                              right: 4,
-                              bgcolor: "rgba(0,0,0,0.8)",
-                              color: "white",
-                              fontSize: "0.7rem",
-                              height: 16
-                            }}
-                          />
-                        </Box>
-                        <Box sx={{ flex: 1, minWidth: 0 }}>
-                          <Typography
-                            variant="body2"
-                            fontWeight="bold"
-                            sx={{
-                              overflow: "hidden",
-                              textOverflow: "ellipsis",
-                              display: "-webkit-box",
-                              WebkitLineClamp: 2,
-                              WebkitBoxOrient: "vertical"
-                            }}
-                          >
+                      <Box sx={{ display: "flex" }}>
+                        <CardMedia
+                          component="img"
+                          sx={{ width: 120, height: 68 }}
+                          image={relatedVideo.thumbnail || "https://picsum.photos/320/180?random=" + relatedVideo._id}
+                          alt={relatedVideo.title}
+                        />
+                        <Box sx={{ display: "flex", flexDirection: "column", flex: 1, p: 1 }}>
+                          <Typography variant="subtitle2" fontWeight="bold" noWrap>
                             {relatedVideo.title}
                           </Typography>
                           <Typography variant="caption" color="text.secondary">
-                            {formatNumber(relatedVideo.views)} views • {relatedVideo.uploadedAt}
+                            {relatedVideo.owner?.username}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            {formatNumber(relatedVideo.views || 0)} views
                           </Typography>
                         </Box>
                       </Box>
-                    </motion.div>
+                    </Card>
                   ))}
                 </Stack>
-              </CardContent>
-            </Card>
-
-            {/* Credit Info */}
-            {user && !user.isPremium && (
-              <Card sx={{ bgcolor: "warning.light" }}>
-                <CardContent>
-                  <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-                    <CreditIcon sx={{ mr: 1, color: "warning.main" }} />
-                    <Typography variant="h6" fontWeight="bold">
-                      -1 Credit Used
-                    </Typography>
-                  </Box>
-                  <Typography variant="body2" paragraph>
-                    Watching this video cost 1 credit. Upgrade to Premium for unlimited viewing!
-                  </Typography>
-                  <Button variant="contained" size="small" fullWidth>
-                    Upgrade to Premium
-                  </Button>
-                </CardContent>
-              </Card>
-            )}
-                      </Stack>
-          </Grid>
+              )}
+            </CardContent>
+          </Card>
         </Grid>
+      </Grid>
 
       {/* Share Dialog */}
-      <Dialog open={showShareDialog} onClose={() => setShowShareDialog(false)}>
+      <Dialog open={showShareDialog} onClose={() => setShowShareDialog(false)} maxWidth="sm" fullWidth>
         <DialogTitle>Share this video</DialogTitle>
         <DialogContent>
-          <Stack spacing={2} sx={{ minWidth: 300 }}>
-            <TextField
+          <Stack spacing={2}>
+            <Button
               fullWidth
-              label="Video URL"
-              value={`https://videovault.com/video/${video.id}`}
-              InputProps={{ readOnly: true }}
-            />
-            <Box sx={{ display: "flex", gap: 1 }}>
-              <Button variant="outlined">Twitter</Button>
-              <Button variant="outlined">Facebook</Button>
-              <Button variant="outlined">Copy Link</Button>
-            </Box>
+              startIcon={<CopyIcon />}
+              onClick={() => handleShare('copy')}
+              variant="outlined"
+            >
+              Copy Link
+            </Button>
+            <Button
+              fullWidth
+              startIcon={<FacebookIcon />}
+              onClick={() => handleShare('facebook')}
+              variant="outlined"
+              sx={{ color: '#1877F2', borderColor: '#1877F2' }}
+            >
+              Share on Facebook
+            </Button>
+            <Button
+              fullWidth
+              startIcon={<TwitterIcon />}
+              onClick={() => handleShare('twitter')}
+              variant="outlined"
+              sx={{ color: '#1DA1F2', borderColor: '#1DA1F2' }}
+            >
+              Share on Twitter
+            </Button>
+            <Button
+              fullWidth
+              startIcon={<WhatsAppIcon />}
+              onClick={() => handleShare('whatsapp')}
+              variant="outlined"
+              sx={{ color: '#25D366', borderColor: '#25D366' }}
+            >
+              Share on WhatsApp
+            </Button>
           </Stack>
         </DialogContent>
         <DialogActions>
@@ -674,24 +781,49 @@ export default function VideoPlayer() {
       </Dialog>
 
       {/* Report Dialog */}
-      <Dialog open={showReportDialog} onClose={() => setShowReportDialog(false)}>
-        <DialogTitle>Report Video</DialogTitle>
+      <Dialog open={showReportDialog} onClose={() => setShowReportDialog(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>Report this video</DialogTitle>
         <DialogContent>
-          <Typography variant="body2" paragraph>
-            Help us keep VideoVault safe. Why are you reporting this video?
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            Help us understand what's happening with this video.
           </Typography>
           <Stack spacing={1}>
-            <Button variant="outlined" fullWidth>Spam or misleading</Button>
-            <Button variant="outlined" fullWidth>Inappropriate content</Button>
-            <Button variant="outlined" fullWidth>Harassment or bullying</Button>
-            <Button variant="outlined" fullWidth>Copyright violation</Button>
+            <Button fullWidth variant="outlined" onClick={() => setShowReportDialog(false)}>
+              Spam or misleading
+            </Button>
+            <Button fullWidth variant="outlined" onClick={() => setShowReportDialog(false)}>
+              Violent or repulsive content
+            </Button>
+            <Button fullWidth variant="outlined" onClick={() => setShowReportDialog(false)}>
+              Hateful or abusive content
+            </Button>
+            <Button fullWidth variant="outlined" onClick={() => setShowReportDialog(false)}>
+              Harmful or dangerous acts
+            </Button>
+            <Button fullWidth variant="outlined" onClick={() => setShowReportDialog(false)}>
+              Copyright infringement
+            </Button>
           </Stack>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setShowReportDialog(false)}>Cancel</Button>
-          <Button variant="contained" color="error">Report</Button>
         </DialogActions>
       </Dialog>
+
+      {/* Snackbar for notifications */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={4000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+      >
+        <Alert 
+          onClose={() => setSnackbar({ ...snackbar, open: false })} 
+          severity={snackbar.severity}
+          sx={{ width: '100%' }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Container>
   );
 }

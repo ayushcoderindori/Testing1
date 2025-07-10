@@ -1,14 +1,28 @@
-import client from "./axios.js";
+import api from "./axios.js";
 
+// Standard auth functions
 export function login({ email, password }) {
-  return client.post("/users/login", { email, password });
+  return api.post("/users/login", { email, password });
 }
+
 export function register(formData) {
-  return client.post("/users/register", formData);
+  return api.post("/users/register", formData);
 }
+
 export function fetchCurrent() {
-  return client.get("/users/current-user");
+  return api.get("/users/current-user");
 }
+
 export function logout() {
-  return client.post("/users/logout");
+  return api.post("/users/logout");
+}
+
+// OAuth functions
+export function initiateGoogleAuth() {
+  // Redirect to backend Google OAuth endpoint
+  window.location.href = `${api.defaults.baseURL}/users/auth/google`;
+}
+
+export function refreshToken() {
+  return api.post("/users/refresh-token");
 }
