@@ -23,7 +23,7 @@ import {
   Menu,
   MenuItem,
 } from "@mui/material";
-import Grid2 from '@mui/material/Grid2';
+import Grid from '@mui/material/Grid';
 import {
   TrendingUp as TrendingIcon,
   VideoLibrary as VideoIcon,
@@ -153,7 +153,7 @@ export default function Dashboard() {
       </Box>
 
       {/* Stats Overview */}
-      <Grid2 container spacing={3} sx={{ mb: 4 }}>
+      <Grid container spacing={3} sx={{ mb: 4 }}>
         {[
           { 
             label: "Total Videos", 
@@ -198,7 +198,7 @@ export default function Dashboard() {
             change: "↑0.2 this month"
           }
         ].map((stat, index) => (
-          <Grid2 xs={12} sm={6} md={4} lg={2} key={stat.label}>
+          <Grid item xs={12} sm={6} md={4} lg={2} key={stat.label}>
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -237,13 +237,13 @@ export default function Dashboard() {
                 </CardContent>
               </Card>
             </motion.div>
-          </Grid2>
+          </Grid>
         ))}
-      </Grid2>
+      </Grid>
 
-      <Grid2 container spacing={4}>
+      <Grid container spacing={4}>
         {/* Main Content */}
-        <Grid2 xs={12} lg={8}>
+        <Grid item xs={12} lg={8}>
           <Paper sx={{ mb: 3 }}>
             <Tabs value={activeTab} onChange={handleTabChange}>
               <Tab label="My Videos" />
@@ -268,9 +268,9 @@ export default function Dashboard() {
                     </Button>
                   </Box>
 
-                  <Grid2 container spacing={3}>
+                  <Grid container spacing={3}>
                     {mockDashboardData.recentVideos.map((video) => (
-                      <Grid2 xs={12} md={6} key={video.id}>
+                      <Grid item xs={12} md={6} key={video.id}>
                         <motion.div
                           whileHover={{ scale: 1.02 }}
                           transition={{ duration: 0.2 }}
@@ -349,9 +349,9 @@ export default function Dashboard() {
                             </CardContent>
                           </Card>
                         </motion.div>
-                      </Grid2>
+                      </Grid>
                     ))}
-                  </Grid2>
+                  </Grid>
                 </Stack>
               )}
 
@@ -360,8 +360,8 @@ export default function Dashboard() {
                 <Stack spacing={3}>
                   <Typography variant="h6">Video Analytics</Typography>
                   
-                  <Grid2 container spacing={3}>
-                    <Grid2 xs={12} md={8}>
+                  <Grid container spacing={3}>
+                    <Grid item xs={12} md={8}>
                       <Card>
                         <CardContent>
                           <Typography variant="h6" gutterBottom>
@@ -390,9 +390,9 @@ export default function Dashboard() {
                           </Box>
                         </CardContent>
                       </Card>
-                    </Grid2>
+                    </Grid>
                     
-                    <Grid2 xs={12} md={4}>
+                    <Grid item xs={12} md={4}>
                       <Card>
                         <CardContent>
                           <Typography variant="h6" gutterBottom>
@@ -414,8 +414,8 @@ export default function Dashboard() {
                           </Stack>
                         </CardContent>
                       </Card>
-                    </Grid2>
-                  </Grid2>
+                    </Grid>
+                  </Grid>
                 </Stack>
               )}
 
@@ -436,10 +436,10 @@ export default function Dashboard() {
               )}
             </Box>
           </Paper>
-        </Grid2>
+        </Grid>
 
         {/* Sidebar */}
-        <Grid2 xs={12} lg={4}>
+        <Grid item xs={12} lg={4}>
           <Stack spacing={3}>
             {/* Quick Actions */}
             <Card>
@@ -513,8 +513,8 @@ export default function Dashboard() {
               </CardContent>
             </Card>
           </Stack>
-        </Grid2>
-      </Grid2>
+        </Grid>
+      </Grid>
 
       {/* Video Menu */}
       <Menu
