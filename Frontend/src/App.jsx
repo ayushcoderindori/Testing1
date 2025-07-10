@@ -9,6 +9,8 @@ import Router from "./router/index.jsx";
 import { AuthProvider } from "./auth/AuthContext.jsx";
 import ErrorBoundary from "./components/ErrorBoundary.jsx";
 
+import { ThemeContextProvider } from "./contexts/ThemeContext.jsx";
+
 // Create a client
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -25,12 +27,12 @@ export default function App() {
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <BrowserRouter>
-          <ThemeProvider theme={theme}>
+          <ThemeContextProvider>
             <CssBaseline />
             <AuthProvider>
               <Router />
             </AuthProvider>
-          </ThemeProvider>
+          </ThemeContextProvider>
         </BrowserRouter>
         <ReactQueryDevtools initialIsOpen={false} />
       </QueryClientProvider>
