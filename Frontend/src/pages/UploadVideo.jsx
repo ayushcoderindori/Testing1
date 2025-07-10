@@ -37,7 +37,7 @@ import {
 } from "@mui/icons-material";
 import { motion, AnimatePresence } from "framer-motion";
 import useAuth from "../auth/useAuth.js";
-import Grid2 from '@mui/material/Grid2';
+import Grid from '@mui/material/Grid';
 
 const categories = [
   "Tech", "Entertainment", "Education", "Gaming", "Art", "Music", 
@@ -390,9 +390,9 @@ export default function UploadVideo() {
           </motion.div>
         </Box>
 
-        <Grid2 container spacing={4}>
+        <Grid container spacing={4}>
           {/* Upload Section */}
-          <Grid2 xs={12} md={6}>
+          <Grid item xs={12} md={6}>
             <Typography variant="h5" gutterBottom fontWeight="bold">
               1. Select Your Video
             </Typography>
@@ -438,10 +438,10 @@ export default function UploadVideo() {
                 />
               </Box>
             </Card>
-          </Grid2>
+          </Grid>
 
           {/* Form Section */}
-          <Grid2 xs={12} md={6}>
+          <Grid item xs={12} md={6}>
             <Typography variant="h5" gutterBottom fontWeight="bold">
               2. Video Details
             </Typography>
@@ -570,8 +570,8 @@ export default function UploadVideo() {
                 </Stack>
               </Box>
             </Stack>
-          </Grid2>
-        </Grid2>
+          </Grid>
+        </Grid>
 
         {/* Upload Progress */}
         <AnimatePresence>
