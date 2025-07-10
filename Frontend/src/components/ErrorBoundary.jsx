@@ -13,7 +13,6 @@ import {
   Refresh as RefreshIcon,
   Home as HomeIcon
 } from '@mui/icons-material';
-import { useNavigate } from 'react-router-dom';
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -39,14 +38,12 @@ class ErrorBoundary extends React.Component {
 }
 
 function ErrorFallback({ error }) {
-  const navigate = useNavigate();
-
   const handleReload = () => {
     window.location.reload();
   };
 
   const handleGoHome = () => {
-    navigate('/');
+    window.location.href = '/';
   };
 
   return (
